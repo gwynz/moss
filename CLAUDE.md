@@ -1,0 +1,73 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+# Run as desktop app
+uv run flet run
+
+# Run as web app
+uv run flet run --web
+
+# Build for distribution
+flet build apk -v      # Android
+flet build windows -v  # Windows
+flet build macos -v    # macOS
+flet build linux -v    # Linux
+```
+
+There is no test suite. The app entry point is `src/main.py` and Flet uses `[tool.flet.app] path = "src"` from `pyproject.toml` to locate it.
+
+## Architecture
+
+This is a **Flet controls gallery** — an interactive browser for Flet UI components built using Flet's React-inspired component model (hooks, contexts, observable state).
+
+### Component model
+
+Components are plain Python functions decorated with `@ft.component`. They use hooks:
+- `ft.use_state` — local state
+- `ft.use_callback` — stable callback identity across renders
+- `ft.use_memo` — memoized values
+- `ft.use_context` — consume a context
+- `ft.on_mounted` / `ft.on_updated` — lifecycle effects
+
+State models use `@ft.observable` + `@dataclass` (see `src/models/app_model.py`). Mutating a field on an observable triggers re-render.
+
+Contexts are created with `ft.create_context(default_value)` (see `src/contexts/`). The two app-wide contexts are `RouteContext` and `ThemeContext`.
+
+### Data flow
+
+```
+Gallery (model)
+  └─ scans src/examples/<group>/<control>/ at startup via importlib
+  └─ builds ControlGroup → ControlItem → ExampleItem tree
+
+App (component)
+  └─ AppModel (observable) — holds route, theme_mode, theme_color
+  └─ provides RouteContext + ThemeContext
+  └─ renders GalleryView or DiagnosticsView (route == "/__diag")
+
+GalleryView
+  └─ Navigation (sidebar, groups)
+  └─ GroupView (grid of controls) or ControlView (list of examples)
+```
+
+### Routing
+
+Routes follow the pattern `/<group>/<control>`, e.g. `/buttons/button`. The `Route` utility (`src/utils/route.py`) parses these into `.group` and `.control` properties. Navigation is done via `app.navigate(new_route)` which calls `page.push_route`.
+
+### Adding a new example
+
+1. Create `src/examples/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/gallery.py`).
+2. Add `index.py` with module-level `name: str` and optional `description: str`.
+3. Add numbered example files like `01_my_example.py`. Each must export:
+   - `name: str` — display name
+   - `example()` — callable returning a `ft.Control`
+
+The `Gallery` model auto-discovers and imports all example modules at startup using `importlib`. Files prefixed with `_` are ignored. The numeric prefix (`01_`, `02_`, …) controls display order.
+
+### Adding a new control group
+
+Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/gallery.py` and create the matching `src/examples/<name>/` directory.
