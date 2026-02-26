@@ -2,7 +2,7 @@ import flet as ft
 
 
 from services._fingerprint_defaults import (
-    USER_AGENTS, PLATFORMS, LANGUAGES, SCREEN_RESOLUTIONS,
+    USER_AGENTS, PLATFORMS, LANGUAGES,
     TIMEZONES, WEBGL_CONFIGS, HARDWARE_CONCURRENCIES, DEVICE_MEMORIES,
     COLOR_DEPTHS, PIXEL_RATIOS, WEBRTC_POLICIES, generate_random_fingerprint,
 )
@@ -18,7 +18,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults = generate_random_fingerprint()
         defaults["name"] = ""
         defaults["notes"] = ""
-        defaults["proxy_type"] = ""
+        defaults["proxy_type"] = "http"
         defaults["proxy_host"] = ""
         defaults["proxy_port"] = 0
         defaults["proxy_username"] = ""
@@ -31,6 +31,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
         defaults["cookies"] = ""
+        defaults["geoip"] = True
         return defaults
 
     form_data, set_form_data = ft.use_state(make_initial())
@@ -49,9 +50,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data["notes"] = current_notes
         # Preserve proxy/advanced settings
         for key in ("proxy_type", "proxy_host", "proxy_port", "proxy_username",
-                    "proxy_password", "fonts", "geo_latitude", "geo_longitude",
-                    "geo_accuracy", "media_devices", "extensions_path",
-                    "startup_url", "cookies"):
+                    "proxy_password", "fonts", "media_devices", "extensions_path",
+                    "startup_url", "cookies", "geoip"):
             new_data[key] = form_data.get(key, "")
         set_form_data(new_data)
 
@@ -114,23 +114,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     ]
 
     # === Tab 2: Display ===
-    res_options = [f"{w}x{h}" for w, h in SCREEN_RESOLUTIONS]
-    current_res = f"{form_data.get('screen_width', 1920)}x{form_data.get('screen_height', 1080)}"
-
-    def on_res_change(e):
-        parts = e.control.value.split("x")
-        if len(parts) == 2:
-            update_field("screen_width", int(parts[0]))
-            update_field("screen_height", int(parts[1]))
-
     display_controls: list[ft.Control] = [
-        ft.Dropdown(
-            label="Screen Resolution",
-            value=current_res if current_res in res_options else res_options[0],
-            options=[ft.DropdownOption(r) for r in res_options],
-            on_select=on_res_change,
-            text_size=13,
-        ),
         number_field("Screen Width", "screen_width"),
         number_field("Screen Height", "screen_height"),
         dropdown_field("Color Depth", "color_depth", COLOR_DEPTHS),
@@ -164,7 +148,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     # === Tab 4: Network ===
     network_controls: list[ft.Control] = [
         ft.Text("Proxy", size=14, weight=ft.FontWeight.W_500),
-        dropdown_field("Proxy Type", "proxy_type", ["", "http", "socks5"]),
+        dropdown_field("Proxy Type", "proxy_type", ["http", "socks5"]),
         text_field("Proxy Host", "proxy_host"),
         number_field("Proxy Port", "proxy_port"),
         text_field("Proxy Username", "proxy_username"),
@@ -222,9 +206,17 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         dropdown_field("Timezone", "timezone", TIMEZONES),
         ft.Divider(),
         ft.Text("Geolocation", size=14, weight=ft.FontWeight.W_500),
-        number_field("Latitude", "geo_latitude"),
-        number_field("Longitude", "geo_longitude"),
-        number_field("Accuracy (meters)", "geo_accuracy"),
+        ft.Checkbox(
+            label="Enable GeoIP",
+            value=bool(form_data.get("geoip", True)),
+            on_change=lambda e: update_field("geoip", e.control.value),
+        ),
+        number_field("Latitude", "geo_latitude",
+                     disabled=bool(form_data.get("geoip", True))),
+        number_field("Longitude", "geo_longitude",
+                     disabled=bool(form_data.get("geoip", True))),
+        number_field("Accuracy (meters)", "geo_accuracy",
+                     disabled=bool(form_data.get("geoip", True))),
         ft.Divider(),
         ft.Text("Extensions", size=14, weight=ft.FontWeight.W_500),
         text_field("Extensions Path (unpacked)", "extensions_path"),

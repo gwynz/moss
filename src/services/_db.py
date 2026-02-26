@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     fonts TEXT NOT NULL DEFAULT '',
 
     -- Geolocation
+    geoip INTEGER NOT NULL DEFAULT 1,
     geo_latitude REAL,
     geo_longitude REAL,
     geo_accuracy REAL NOT NULL DEFAULT 100.0,

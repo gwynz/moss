@@ -15,7 +15,9 @@ dependencies = [
   "flet-web",
   "objgraph",
   "playwright",
-  "aiosqlite"
+  "aiosqlite",
+  "camoufox[geoip]",
+  "browserforge>=1.2.4",
 ]
 
 [tool.flet]

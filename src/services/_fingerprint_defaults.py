@@ -1,5 +1,7 @@
 import random
+from browserforge.fingerprints import FingerprintGenerator
 
+# Keep some constants for UI/Selection if needed
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
@@ -13,20 +15,8 @@ USER_AGENTS = [
 
 PLATFORMS = ["Win32", "MacIntel", "Linux x86_64"]
 
-LANGUAGES = ["en-US", "en-GB", "de-DE", "fr-FR", "es-ES", "pt-BR", "ja-JP", "zh-CN", "ko-KR", "ru-RU"]
-
-SCREEN_RESOLUTIONS = [
-    (1920, 1080),
-    (2560, 1440),
-    (1366, 768),
-    (1536, 864),
-    (1440, 900),
-    (1680, 1050),
-    (3840, 2160),
-    (1280, 720),
-    (1600, 900),
-    (2560, 1080),
-]
+LANGUAGES = ["en-US", "en-GB", "de-DE", "fr-FR",
+             "es-ES", "pt-BR", "ja-JP", "zh-CN", "ko-KR", "ru-RU"]
 
 TIMEZONES = [
     "America/New_York",
@@ -41,60 +31,96 @@ TIMEZONES = [
     "Australia/Sydney",
 ]
 
-WEBGL_CONFIGS = [
-    ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 SUPER Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (AMD)", "ANGLE (AMD, AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (AMD)", "ANGLE (AMD, AMD Radeon RX 580 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)"),
-    ("Google Inc. (Apple)", "ANGLE (Apple, Apple M1, OpenGL 4.1)"),
-    ("Google Inc. (Apple)", "ANGLE (Apple, Apple M2, OpenGL 4.1)"),
-]
-
-HARDWARE_CONCURRENCIES = [2, 4, 6, 8, 12, 16]
-DEVICE_MEMORIES = [2, 4, 8, 16, 32]
-COLOR_DEPTHS = [24, 30, 32]
-PIXEL_RATIOS = [1.0, 1.25, 1.5, 2.0]
-
 WEBRTC_POLICIES = ["default", "disable_non_proxied_udp", "disable"]
 
 
+HARDWARE_CONCURRENCIES = [2, 4, 8, 12, 16, 24, 32]
+DEVICE_MEMORIES = [4, 8, 16, 32, 64]
+COLOR_DEPTHS = [24, 30]
+PIXEL_RATIOS = [1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
+
+WEBGL_CONFIGS = [
+    ("Google Inc. (NVIDIA)",
+     "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
+    ("Google Inc. (NVIDIA)",
+     "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
+    ("Google Inc. (Intel)",
+     "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)"),
+    ("Google Inc. (Intel)",
+     "ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)"),
+    ("Google Inc. (ATI Technologies Inc.)",
+     "ANGLE (ATI Technologies Inc., AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0, D3D11)"),
+    ("Apple Inc.", "Apple M1"),
+    ("Apple Inc.", "Apple M2"),
+    ("Apple Inc.", "Apple M3"),
+]
+
+
 def generate_random_fingerprint() -> dict:
-    ua = random.choice(USER_AGENTS)
+    # Use browserforge to generate a realistic fingerprint
+    # Restrict to desktop browsers (chrome, edge, firefox, safari)
+    fg = FingerprintGenerator(
+        browser=["chrome", "edge", "firefox", "safari"],
+        os=["windows", "macos", "linux"],
+    )
+    fp = fg.generate()
 
-    if "Windows" in ua:
-        platform = "Win32"
-    elif "Macintosh" in ua or "Mac OS" in ua:
-        platform = "MacIntel"
-    elif "Linux" in ua:
-        platform = "Linux x86_64"
-    else:
-        platform = random.choice(PLATFORMS)
+    # browserforge returns a Fingerprint object with nested attributes
+    navigator = fp.navigator
+    screen = fp.screen
+    video_card = fp.videoCard
 
-    lang = random.choice(LANGUAGES)
-    lang_base = lang.split("-")[0]
-    languages = f"{lang},{lang_base}"
+    # Extract values, mapping to our flat dictionary structure
+    ua = navigator.userAgent
+    platform = navigator.platform
+    lang = navigator.language
+    # languages is typically a list in browserforge
+    languages = ",".join(getattr(navigator, "languages", [lang]))
 
-    width, height = random.choice(SCREEN_RESOLUTIONS)
-    webgl_vendor, webgl_renderer = random.choice(WEBGL_CONFIGS)
+    width = screen.width
+    height = screen.height
+    color_depth = screen.colorDepth
+    # devicePixelRatio is found in the screen object
+    pixel_ratio = getattr(screen, "devicePixelRatio", 1.0)
+
+    hardware_concurrency = navigator.hardwareConcurrency
+    device_memory = navigator.deviceMemory
+
+    # videoCard can be None in some fingerprints
+    webgl_vendor = getattr(
+        video_card, "vendor", "Google Inc. (NVIDIA)") if video_card else "Google Inc. (NVIDIA)"
+    webgl_renderer = getattr(
+        video_card, "renderer", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)") if video_card else "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)"
+
+    # Extract additional fields from browserforge if available
+    fonts = ",".join(getattr(fp, "fonts", []))
+    media_devices = getattr(fp, "multimediaDevices", {})
+    # Convert media devices to a simplified string representation if needed,
+    # but for now we'll just store a placeholder or joined string if schema expects it.
+    # Looking at _db.py, media_devices is a TEXT field.
+    media_devices_str = str(media_devices)
 
     return {
         "user_agent": ua,
         "platform": platform,
         "language": lang,
         "languages": languages,
-        "screen_width": width,
-        "screen_height": height,
-        "color_depth": random.choice(COLOR_DEPTHS),
-        "pixel_ratio": random.choice(PIXEL_RATIOS),
-        "hardware_concurrency": random.choice(HARDWARE_CONCURRENCIES),
-        "device_memory": random.choice(DEVICE_MEMORIES),
+        "screen_width": 1280,
+        "screen_height": 720,
+        "color_depth": color_depth,
+        "pixel_ratio": pixel_ratio,
+        "hardware_concurrency": hardware_concurrency,
+        "device_memory": device_memory,
+        # browserforge doesn't provide TZ easily in the same way
         "timezone": random.choice(TIMEZONES),
         "webgl_vendor": webgl_vendor,
         "webgl_renderer": webgl_renderer,
         "canvas_noise": round(random.uniform(0.01, 0.05), 4),
         "audio_noise": round(random.uniform(0.001, 0.01), 4),
         "webrtc_policy": "default",
+        "fonts": fonts,
+        "media_devices": media_devices_str,
+        "geo_latitude": random.uniform(-90, 90),
+        "geo_longitude": random.uniform(-180, 180),
+        "geo_accuracy": random.uniform(0, 100),
     }

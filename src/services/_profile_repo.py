@@ -15,6 +15,7 @@ _MUTABLE_COLUMNS = [
     "canvas_noise", "audio_noise",
     "webrtc_policy",
     "fonts",
+    "geoip",
     "geo_latitude", "geo_longitude", "geo_accuracy",
     "media_devices",
     "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
@@ -23,20 +24,21 @@ _MUTABLE_COLUMNS = [
 ]
 
 _ALL_COLUMNS = ["id", "name", "notes", "created_at", "updated_at", "last_launched",
-    "user_agent", "platform", "language", "languages",
-    "screen_width", "screen_height", "color_depth", "pixel_ratio",
-    "hardware_concurrency", "device_memory",
-    "timezone",
-    "webgl_vendor", "webgl_renderer",
-    "canvas_noise", "audio_noise",
-    "webrtc_policy",
-    "fonts",
-    "geo_latitude", "geo_longitude", "geo_accuracy",
-    "media_devices",
-    "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
-    "extensions_path", "startup_url", "cookies",
-    "user_data_dir", "is_running",
-]
+                "user_agent", "platform", "language", "languages",
+                "screen_width", "screen_height", "color_depth", "pixel_ratio",
+                "hardware_concurrency", "device_memory",
+                "timezone",
+                "webgl_vendor", "webgl_renderer",
+                "canvas_noise", "audio_noise",
+                "webrtc_policy",
+                "fonts",
+                "geoip",
+                "geo_latitude", "geo_longitude", "geo_accuracy",
+                "media_devices",
+                "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
+                "extensions_path", "startup_url", "cookies",
+                "user_data_dir", "is_running",
+                ]
 
 
 def _row_to_dict(row) -> dict:

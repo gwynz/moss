@@ -1,27 +1,17 @@
 import asyncio
 import atexit
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from services._fingerprint_scripts import get_all_scripts
 from services import _profile_repo as repo
 
 if TYPE_CHECKING:
-    from playwright.async_api import BrowserContext
+    from playwright.async_api import Browser, BrowserContext
 
-_running_contexts: dict[str, "BrowserContext"] = {}  # profile_id -> BrowserContext
-_playwright_instance = None
+# profile_id -> BrowserContext
+_running_contexts: dict[str, "BrowserContext"] = {}
+_camoufox_instance = None
 _DB_DIR = Path.home() / ".moss"
-
-
-async def _get_playwright():
-    global _playwright_instance
-    if _playwright_instance is None:
-        from playwright.async_api import async_playwright
-        pw = async_playwright()
-        _playwright_instance = await pw.start()
-    return _playwright_instance
 
 
 async def launch_profile(profile: dict) -> bool:
@@ -29,67 +19,16 @@ async def launch_profile(profile: dict) -> bool:
     if profile_id in _running_contexts:
         return False
 
-    pw = await _get_playwright()
+    from camoufox.async_api import AsyncCamoufox
+    from browserforge.fingerprints import Screen
 
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
         user_data_dir = str(_DB_DIR / "browser_data" / profile_id)
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
-    args = [
-        "--disable-blink-features=AutomationControlled",
-        "--disable-infobars",
-        "--no-first-run",
-        "--no-default-browser-check",
-    ]
-
-    webrtc_policy = profile.get("webrtc_policy", "default")
-    if webrtc_policy == "disable_non_proxied_udp":
-        args.append("--webrtc-ip-handling-policy=disable_non_proxied_udp")
-    elif webrtc_policy == "disable":
-        args.append("--webrtc-ip-handling-policy=disable_non_proxied_udp")
-        args.append("--disable-webrtc-hw-encoding")
-        args.append("--disable-webrtc-hw-decoding")
-
-    extensions_path = profile.get("extensions_path", "")
-    if extensions_path and Path(extensions_path).exists():
-        args.append(f"--load-extension={extensions_path}")
-        args.append(f"--disable-extensions-except={extensions_path}")
-
-    launch_kwargs = {
-        "user_data_dir": user_data_dir,
-        "headless": False,
-        "args": args,
-        "ignore_default_args": ["--enable-automation"],
-        "chromium_sandbox": False,
-    }
-
-    ua = profile.get("user_agent", "")
-    if ua:
-        launch_kwargs["user_agent"] = ua
-
-    w = profile.get("screen_width", 1920)
-    h = profile.get("screen_height", 1080)
-    launch_kwargs["viewport"] = {"width": w, "height": h}
-
-    tz = profile.get("timezone", "")
-    if tz:
-        launch_kwargs["timezone_id"] = tz
-
-    lang = profile.get("language", "")
-    if lang:
-        launch_kwargs["locale"] = lang
-
-    geo_lat = profile.get("geo_latitude")
-    geo_lng = profile.get("geo_longitude")
-    if geo_lat is not None and geo_lng is not None:
-        launch_kwargs["geolocation"] = {
-            "latitude": geo_lat,
-            "longitude": geo_lng,
-            "accuracy": profile.get("geo_accuracy", 100.0),
-        }
-        launch_kwargs["permissions"] = ["geolocation"]
-
+    # Map profile to Camoufox options
+    proxy_config = None
     proxy_type = profile.get("proxy_type", "")
     proxy_host = profile.get("proxy_host", "")
     proxy_port = profile.get("proxy_port", 0)
@@ -101,28 +40,68 @@ async def launch_profile(profile: dict) -> bool:
             proxy_config["username"] = proxy_user
         if proxy_pass:
             proxy_config["password"] = proxy_pass
-        launch_kwargs["proxy"] = proxy_config
 
-    context = await pw.chromium.launch_persistent_context(**launch_kwargs)
+    # Camoufox specific and Playwright standard options
+    # Note: Camoufox handles fingerprinting automatically.
+    # We can pass 'os', 'fonts', etc. if we want to be specific.
 
-    fingerprint_js = get_all_scripts(profile)
-    if fingerprint_js:
-        await context.add_init_script(fingerprint_js)
-        for page in context.pages:
-            await page.add_init_script(fingerprint_js)
+    launch_kwargs = {
+        "user_data_dir": user_data_dir,
+        "persistent_context": True,
+        "headless": False,
+        "proxy": proxy_config,
+        "geoip": True,
+    }
 
-    # Import cookies if present
-    cookies_json = profile.get("cookies", "")
-    if cookies_json:
-        import json
+    # Set screen size if available
+    screen_width = profile.get("screen_width")
+    screen_height = profile.get("screen_height")
+    if screen_width and screen_height:
         try:
-            cookies = json.loads(cookies_json)
-            if cookies:
-                await context.add_cookies(cookies)
-        except (json.JSONDecodeError, TypeError):
+            w, h = int(screen_width), int(screen_height)
+            launch_kwargs["screen"] = Screen(max_width=w, max_height=h)
+            launch_kwargs["window"] = (w, h)
+        except (ValueError, TypeError):
             pass
 
+    # Map OS if available in profile
+    platform = profile.get("platform", "").lower()
+    if "win" in platform:
+        launch_kwargs["os"] = "windows"
+    elif "mac" in platform:
+        launch_kwargs["os"] = "macos"
+    elif "linux" in platform:
+        launch_kwargs["os"] = "linux"
+
+    browser_manager = AsyncCamoufox(**launch_kwargs)
+    result = await browser_manager.__aenter__()
+
+    # Ensure it's a context (Camoufox returns context if persistent_context=True)
+    # When persistent_context=True, AsyncCamoufox returns a BrowserContext.
+    # Otherwise it returns a Browser.
+    from playwright.async_api import Browser, BrowserContext
+
+    if isinstance(result, Browser):
+        context = await result.new_context()
+    elif isinstance(result, BrowserContext):
+        context = result
+    else:
+        # Fallback for type narrowing
+        context = result  # type: ignore
+
+    # Store context
     _running_contexts[profile_id] = context
+
+    # # Import cookies if present
+    # cookies_json = profile.get("cookies", "")
+    # if cookies_json:
+    #     import json
+    #     try:
+    #         cookies = json.loads(cookies_json)
+    #         if cookies:
+    #             await context.add_cookies(cookies)
+    #     except (json.JSONDecodeError, TypeError):
+    #         pass
 
     await repo.set_running(profile_id, True)
     await repo.set_last_launched(profile_id)
@@ -137,7 +116,16 @@ async def launch_profile(profile: dict) -> bool:
             await page.goto(startup_url)
 
     # Watch for browser close
-    context.on("close", lambda _ctx: asyncio.ensure_future(_on_context_closed(profile_id)))
+    # Using 'close' for BrowserContext is correct in Playwright.
+    # If the error persists, it might be due to incorrect type narrowing
+    # or Pylance being overly strict with the literal.
+    # The error "Argument of type 'Literal['close']' cannot be assigned to parameter 'event' of type 'Literal['disconnected']' in function 'on'"
+    # suggests it might be expecting 'disconnected' if it thinks it's a Browser,
+    # but for BrowserContext 'close' is correct.
+    # We cast to any to bypass the literal check if Pylance is confused.
+    from typing import Any
+    context.on("close", lambda _ctx: asyncio.ensure_future(
+        _on_context_closed(profile_id)))  # type: ignore
 
     return True
 
@@ -203,13 +191,6 @@ async def close_all():
     profile_ids = list(_running_contexts.keys())
     for pid in profile_ids:
         await close_profile(pid)
-    global _playwright_instance
-    if _playwright_instance:
-        try:
-            await _playwright_instance.stop()
-        except Exception:
-            pass
-        _playwright_instance = None
 
 
 def _atexit_cleanup():
