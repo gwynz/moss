@@ -102,18 +102,21 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             padding=16,
         )
 
-    # === Tab 1: Identity ===
-    identity_controls: list[ft.Control] = [
+    # === Tab 1: Profile ===
+    profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
-        ft.Divider(),
+    ]
+
+    # === Tab 2: Browser ===
+    browser_controls: list[ft.Control] = [
         dropdown_field("User Agent", "user_agent", USER_AGENTS),
         dropdown_field("Platform", "platform", PLATFORMS),
         dropdown_field("Language", "language", LANGUAGES),
-        text_field("Languages (comma-separated)", "languages"),
+        dropdown_field("Timezone", "timezone", TIMEZONES),
     ]
 
-    # === Tab 2: Display ===
+    # === Tab 3: Display ===
     display_controls: list[ft.Control] = [
         number_field("Screen Width", "screen_width"),
         number_field("Screen Height", "screen_height"),
@@ -121,15 +124,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         dropdown_field("Pixel Ratio", "pixel_ratio", PIXEL_RATIOS),
     ]
 
-    def _randomize_webgl():
-        import random
-        vendor, renderer = random.choice(WEBGL_CONFIGS)
-        new_data = dict(form_data)
-        new_data["webgl_vendor"] = vendor
-        new_data["webgl_renderer"] = renderer
-        set_form_data(new_data)
-
-    # === Tab 3: Hardware ===
+    # === Tab 4: Hardware ===
     hardware_controls: list[ft.Control] = [
         dropdown_field("CPU Cores", "hardware_concurrency",
                        HARDWARE_CONCURRENCIES),
@@ -138,36 +133,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ft.Text("WebGL", size=14, weight=ft.FontWeight.W_500),
         text_field("WebGL Vendor", "webgl_vendor"),
         text_field("WebGL Renderer", "webgl_renderer"),
-        ft.OutlinedButton(
-            "Randomize WebGL",
-            icon=ft.Icons.SHUFFLE,
-            on_click=lambda _: _randomize_webgl(),
-        ),
-    ]
-
-    # === Tab 4: Network ===
-    network_controls: list[ft.Control] = [
-        ft.Text("Proxy", size=14, weight=ft.FontWeight.W_500),
-        dropdown_field("Proxy Type", "proxy_type", ["http", "socks5"]),
-        text_field("Proxy Host", "proxy_host"),
-        number_field("Proxy Port", "proxy_port"),
-        text_field("Proxy Username", "proxy_username"),
-        text_field("Proxy Password", "proxy_password",
-                   password=True, can_reveal_password=True),
-        ProxyTest(
-            proxy_type=form_data.get("proxy_type", ""),
-            proxy_host=form_data.get("proxy_host", ""),
-            proxy_port=form_data.get("proxy_port", 0),
-            proxy_username=form_data.get("proxy_username", ""),
-            proxy_password=form_data.get("proxy_password", ""),
-        ),
         ft.Divider(),
-        ft.Text("WebRTC", size=14, weight=ft.FontWeight.W_500),
-        dropdown_field("WebRTC Policy", "webrtc_policy", WEBRTC_POLICIES),
-    ]
-
-    # === Tab 5: Privacy ===
-    privacy_controls: list[ft.Control] = [
         ft.Text("Canvas Fingerprint", size=14, weight=ft.FontWeight.W_500),
         ft.Slider(
             min=0, max=0.1,
@@ -191,19 +157,29 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ),
         ft.Text(f"Audio noise: {form_data.get('audio_noise', 0)}",
                 size=12, color=ft.Colors.GREY_500),
-        ft.Divider(),
-        ft.Text("Fonts", size=14, weight=ft.FontWeight.W_500),
-        text_field("Allowed Fonts (comma-separated)", "fonts",
-                   multiline=True, min_lines=2, max_lines=4),
-        ft.Divider(),
-        ft.Text("Media Devices", size=14, weight=ft.FontWeight.W_500),
-        text_field("Media Devices JSON", "media_devices",
-                   multiline=True, min_lines=2, max_lines=6),
     ]
 
-    # === Tab 6: Advanced ===
+    # === Tab 5: Network ===
+    network_controls: list[ft.Control] = [
+        ft.Text("Proxy", size=14, weight=ft.FontWeight.W_500),
+        dropdown_field("Proxy Type", "proxy_type", ["http", "socks5"]),
+        text_field("Proxy Host", "proxy_host"),
+        number_field("Proxy Port", "proxy_port"),
+        text_field("Proxy Username", "proxy_username"),
+        text_field("Proxy Password", "proxy_password",
+                   password=True, can_reveal_password=True),
+        ProxyTest(
+            proxy_type=form_data.get("proxy_type", ""),
+            proxy_host=form_data.get("proxy_host", ""),
+            proxy_port=form_data.get("proxy_port", 0),
+            proxy_username=form_data.get("proxy_username", ""),
+            proxy_password=form_data.get("proxy_password", ""),
+        ),
+    ]
+
+    # === Tab 7: Advanced ===
     advanced_controls: list[ft.Control] = [
-        dropdown_field("Timezone", "timezone", TIMEZONES),
+        text_field("Startup URL", "startup_url"),
         ft.Divider(),
         ft.Text("Geolocation", size=14, weight=ft.FontWeight.W_500),
         ft.Checkbox(
@@ -220,11 +196,6 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ft.Divider(),
         ft.Text("Extensions", size=14, weight=ft.FontWeight.W_500),
         text_field("Extensions Path (unpacked)", "extensions_path"),
-    ]
-
-    # === Tab 7: Startup ===
-    startup_controls: list[ft.Control] = [
-        text_field("Startup URL", "startup_url"),
         ft.Divider(),
         ft.Text("Cookies", size=14, weight=ft.FontWeight.W_500),
         text_field("Cookies JSON (import/export)", "cookies",
@@ -261,23 +232,21 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     )
 
     tab_headers: list[ft.Control] = [
-        ft.Tab(label="Identity", icon=ft.Icons.PERSON),
+        ft.Tab(label="Profile", icon=ft.Icons.PERSON),
+        ft.Tab(label="Browser", icon=ft.Icons.WEB_ASSET),
         ft.Tab(label="Display", icon=ft.Icons.MONITOR),
         ft.Tab(label="Hardware", icon=ft.Icons.MEMORY),
         ft.Tab(label="Network", icon=ft.Icons.WIFI),
-        ft.Tab(label="Privacy", icon=ft.Icons.SHIELD),
         ft.Tab(label="Advanced", icon=ft.Icons.TUNE),
-        ft.Tab(label="Startup", icon=ft.Icons.ROCKET_LAUNCH),
     ]
 
     tab_views: list[ft.Control] = [
-        tab_content(identity_controls),
+        tab_content(profile_controls),
+        tab_content(browser_controls),
         tab_content(display_controls),
         tab_content(hardware_controls),
         tab_content(network_controls),
-        tab_content(privacy_controls),
         tab_content(advanced_controls),
-        tab_content(startup_controls),
     ]
 
     return ft.Column(
@@ -291,7 +260,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
                     ],
                     expand=True,
                 ),
-                length=7,
+                length=6,
                 animation_duration=200,
                 expand=True,
                 selected_index=active_tab,

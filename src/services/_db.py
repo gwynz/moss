@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS profiles (
     user_agent TEXT NOT NULL DEFAULT '',
     platform TEXT NOT NULL DEFAULT 'Win32',
     language TEXT NOT NULL DEFAULT 'en-US',
-    languages TEXT NOT NULL DEFAULT 'en-US,en',
 
     -- Display
     screen_width INTEGER NOT NULL DEFAULT 1920,
@@ -40,20 +39,11 @@ CREATE TABLE IF NOT EXISTS profiles (
     canvas_noise REAL NOT NULL DEFAULT 0.0,
     audio_noise REAL NOT NULL DEFAULT 0.0,
 
-    -- WebRTC
-    webrtc_policy TEXT NOT NULL DEFAULT 'default',
-
-    -- Fonts
-    fonts TEXT NOT NULL DEFAULT '',
-
     -- Geolocation
     geoip INTEGER NOT NULL DEFAULT 1,
     geo_latitude REAL,
     geo_longitude REAL,
     geo_accuracy REAL NOT NULL DEFAULT 100.0,
-
-    -- Media
-    media_devices TEXT NOT NULL DEFAULT '',
 
     -- Proxy
     proxy_type TEXT NOT NULL DEFAULT '',

@@ -74,8 +74,6 @@ def generate_random_fingerprint() -> dict:
     ua = navigator.userAgent
     platform = navigator.platform
     lang = navigator.language
-    # languages is typically a list in browserforge
-    languages = ",".join(getattr(navigator, "languages", [lang]))
 
     width = screen.width
     height = screen.height
@@ -93,18 +91,10 @@ def generate_random_fingerprint() -> dict:
         video_card, "renderer", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)") if video_card else "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)"
 
     # Extract additional fields from browserforge if available
-    fonts = ",".join(getattr(fp, "fonts", []))
-    media_devices = getattr(fp, "multimediaDevices", {})
-    # Convert media devices to a simplified string representation if needed,
-    # but for now we'll just store a placeholder or joined string if schema expects it.
-    # Looking at _db.py, media_devices is a TEXT field.
-    media_devices_str = str(media_devices)
-
     return {
         "user_agent": ua,
         "platform": platform,
         "language": lang,
-        "languages": languages,
         "screen_width": 1280,
         "screen_height": 720,
         "color_depth": color_depth,
@@ -117,9 +107,6 @@ def generate_random_fingerprint() -> dict:
         "webgl_renderer": webgl_renderer,
         "canvas_noise": round(random.uniform(0.01, 0.05), 4),
         "audio_noise": round(random.uniform(0.001, 0.01), 4),
-        "webrtc_policy": "default",
-        "fonts": fonts,
-        "media_devices": media_devices_str,
         "geo_latitude": random.uniform(-90, 90),
         "geo_longitude": random.uniform(-180, 180),
         "geo_accuracy": random.uniform(0, 100),
