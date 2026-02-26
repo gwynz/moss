@@ -41,8 +41,8 @@ Contexts are created with `ft.create_context(default_value)` (see `src/contexts/
 
 ```
 Gallery (model)
-  └─ scans src/examples/<group>/<control>/ at startup via importlib
-  └─ builds ControlGroup → ControlItem → ExampleItem tree
+  └─ scans src/mosses/<group>/<control>/ at startup via importlib
+  └─ builds ControlGroup → ControlItem → MossItem tree
 
 App (component)
   └─ AppModel (observable) — holds route, theme_mode, theme_color
@@ -51,23 +51,23 @@ App (component)
 
 GalleryView
   └─ Navigation (sidebar, groups)
-  └─ GroupView (grid of controls) or ControlView (list of examples)
+  └─ GroupView (grid of controls) or ControlView (list of mosses)
 ```
 
 ### Routing
 
 Routes follow the pattern `/<group>/<control>`, e.g. `/buttons/button`. The `Route` utility (`src/utils/route.py`) parses these into `.group` and `.control` properties. Navigation is done via `app.navigate(new_route)` which calls `page.push_route`.
 
-### Adding a new example
+### Adding a new moss
 
-1. Create `src/examples/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/gallery.py`).
+1. Create `src/mosses/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/gallery.py`).
 2. Add `index.py` with module-level `name: str` and optional `description: str`.
-3. Add numbered example files like `01_my_example.py`. Each must export:
+3. Add numbered moss files like `01_my_moss.py`. Each must export:
    - `name: str` — display name
-   - `example()` — callable returning a `ft.Control`
+   - `moss()` — callable returning a `ft.Control`
 
-The `Gallery` model auto-discovers and imports all example modules at startup using `importlib`. Files prefixed with `_` are ignored. The numeric prefix (`01_`, `02_`, …) controls display order.
+The `Gallery` model auto-discovers and imports all moss modules at startup using `importlib`. Files prefixed with `_` are ignored. The numeric prefix (`01_`, `02_`, …) controls display order.
 
 ### Adding a new control group
 
-Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/gallery.py` and create the matching `src/examples/<name>/` directory.
+Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/gallery.py` and create the matching `src/mosses/<name>/` directory.

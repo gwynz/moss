@@ -9,18 +9,18 @@ import flet as ft
 
 
 @dataclass
-class ExampleItem:
+class MossItem:
     name: str = ""
     file_name: str | None = None
     order: int | None = None
-    example: Callable | None = None
+    moss: Callable | None = None
 
 
 @dataclass
 class ControlItem:
     id: str
     name: str
-    examples: list[ExampleItem] = field(default_factory=list)
+    mosses: list[MossItem] = field(default_factory=list)
     description: str | None = None
 
 
@@ -121,8 +121,8 @@ class Gallery:
     _INDEX_FILE_NAME: ClassVar[str] = "index.py"
 
     def __post_init__(self):
-        self._examples_root = Path(
-            __file__).resolve().parent.parent / "examples"
+        self._mosses_root = Path(
+            __file__).resolve().parent.parent / "mosses"
         self.import_modules()
 
     def get_control_group(self, group_name: str) -> ControlGroup | None:
@@ -135,7 +135,7 @@ class Gallery:
         return next((c for c in control_group.controls if c.id == control_id), None)
 
     def list_control_dirs(self, group_name: str) -> list[str]:
-        base_path = self._examples_root / group_name
+        base_path = self._mosses_root / group_name
         if not base_path.exists():
             return []
         return sorted(
@@ -144,10 +144,10 @@ class Gallery:
             if entry.is_dir() and entry.name not in self._IGNORED_ENTRIES
         )
 
-    def list_example_files(
+    def list_moss_files(
         self, control_group_dir: str, control_dir: str
     ) -> list[Path]:
-        base_path = self._examples_root / control_group_dir / control_dir
+        base_path = self._mosses_root / control_group_dir / control_dir
         if not base_path.exists():
             return []
         return sorted(
@@ -165,26 +165,25 @@ class Gallery:
                 control_group.controls.append(grid_item)
             control_group.controls.sort(
                 key=lambda item: (item.name or item.id).lower())
-            print(control_group.controls)
 
     def _build_grid_item(self, group_name: str, control_dir: str) -> ControlItem:
         grid_item = ControlItem(id=control_dir, name=control_dir)
-        for file_path in self.list_example_files(group_name, control_dir):
+        for file_path in self.list_moss_files(group_name, control_dir):
             module = self._import_module(file_path)
             if file_path.name == self._INDEX_FILE_NAME:
                 grid_item.name = getattr(module, "name", grid_item.name)
                 grid_item.description = getattr(module, "description", None)
                 continue
 
-            example_item = ExampleItem(
+            moss_item = MossItem(
                 name=getattr(module, "name", file_path.stem),
                 file_name=str(file_path.relative_to(
-                    self._examples_root).as_posix()),
-                order=self._parse_example_order(file_path.name),
-                example=getattr(module, "example", None),
+                    self._mosses_root).as_posix()),
+                order=self._parse_moss_order(file_path.name),
+                moss=getattr(module, "moss", None),
             )
-            grid_item.examples.append(example_item)
-        grid_item.examples.sort(
+            grid_item.mosses.append(moss_item)
+        grid_item.mosses.sort(
             key=lambda item: (
                 item.order is None,
                 item.order if item.order is not None else 0,
@@ -195,7 +194,7 @@ class Gallery:
 
     def _import_module(self, file_path: Path):
         module_name = ".".join(
-            file_path.relative_to(self._examples_root).with_suffix("").parts
+            file_path.relative_to(self._mosses_root).with_suffix("").parts
         )
         if module_name in sys.modules:
             print(f"{module_name!r} already in sys.modules")
@@ -208,10 +207,10 @@ class Gallery:
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
-        print(f"{module_name!r} has been imported")
+        # print(f"{module_name!r} has been imported")
         return module
 
     @staticmethod
-    def _parse_example_order(file_name: str) -> int | None:
+    def _parse_moss_order(file_name: str) -> int | None:
         prefix = file_name.split("_", 1)[0]
         return int(prefix) if prefix.isdigit() else None

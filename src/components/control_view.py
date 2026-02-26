@@ -1,10 +1,10 @@
 import flet as ft
 
-from models.gallery import ControlItem, ExampleItem
+from models.gallery import ControlItem, MossItem
 
 
 @ft.component
-def Example(example: ExampleItem):
+def Moss(moss: MossItem):
     return ft.Column(
         controls=[
             # ft.Container(
@@ -12,7 +12,7 @@ def Example(example: ExampleItem):
             #         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             #         controls=[
             #             ft.Text(
-            #                 example.name,
+            #                 moss.name,
             #                 theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
             #                 weight=ft.FontWeight.W_500,
             #                 margin=ft.Margin.only(left=5),
@@ -25,7 +25,7 @@ def Example(example: ExampleItem):
             #                     color=ft.Colors.ON_SURFACE_VARIANT,
             #                 ),
             #                 url=ft.Url(
-            #                     f"https://github.com/flet-dev/gallery/blob/main/src/examples/{example.file_name}",
+            #                     f"https://github.com/flet-dev/gallery/blob/main/src/mosses/{moss.file_name}",
             #                     ft.UrlTarget.BLANK,
             #                 ),
             #             ),
@@ -37,25 +37,25 @@ def Example(example: ExampleItem):
             # ),
             ft.Container(
                 margin=ft.Margin.only(top=20, bottom=20),
-                content=example.example(),
+                content=moss.moss(),
                 clip_behavior=ft.ClipBehavior.NONE,
             )
-            if example.example
-            else ft.Text("No example available"),
+            if moss.moss
+            else ft.Text("No moss available"),
         ],
     )
 
 
 @ft.component
-def ExampleList(examples: list[ExampleItem]):
+def MossList(mosses: list[MossItem]):
     return (
         ft.Column(
             expand=True,
             scroll=ft.ScrollMode.AUTO,
-            controls=[Example(example) for example in examples],
+            controls=[Moss(moss) for moss in mosses],
         )
-        if examples
-        else ft.Text("No examples available")
+        if mosses
+        else ft.Text("No mosses available")
     )
 
 
@@ -76,6 +76,6 @@ def ControlView(control: ControlItem):
                 if control.description
                 else []
             ),
-            ExampleList(control.examples),
+            MossList(control.mosses),
         ],
     )
