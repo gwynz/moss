@@ -132,7 +132,7 @@ def GroupView(group: Group, move_group, **kwargs):
         intrinsic_height=True,
         controls=[
             ft.VerticalDivider(
-                color=ft.Colors.BLACK54,
+                color=ft.Colors.BLACK_54,
                 width=2,
                 thickness=2,
                 radius=2,

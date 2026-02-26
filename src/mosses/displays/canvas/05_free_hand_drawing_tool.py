@@ -84,7 +84,7 @@ def moss():
             ft.Button("Clear", on_click=clear_canvas),
             ft.Container(
                 cp,
-                border=ft.Border.all(2, ft.Colors.BLACK54),
+                border=ft.Border.all(2, ft.Colors.BLACK_54),
                 border_radius=5,
                 bgcolor=ft.Colors.SURFACE_CONTAINER,
                 width=500,

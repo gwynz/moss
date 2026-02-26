@@ -18,7 +18,7 @@ def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete)
                 width=250,
                 height=40,
                 text_size=13,
-                content_padding=ft.padding.only(left=8, right=8, bottom=4),
+                content_padding=ft.Padding(left=8, top=0, right=8, bottom=4),
                 on_change=on_search_change,
             ),
             ft.FilledButton(
@@ -36,7 +36,8 @@ def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete)
         empty = ft.Container(
             content=ft.Column(
                 [
-                    ft.Icon(ft.Icons.PERSON_OFF_OUTLINED, size=48, color=ft.Colors.GREY_500),
+                    ft.Icon(ft.Icons.PERSON_OFF_OUTLINED,
+                            size=48, color=ft.Colors.GREY_500),
                     ft.Text(
                         "No profiles yet" if not model.search_query else "No matching profiles",
                         size=16,

@@ -30,20 +30,22 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
             content=ft.Text(proxy_text, size=10, color=ft.Colors.WHITE),
             bgcolor=ft.Colors.BLUE_700,
             border_radius=4,
-            padding=ft.padding.symmetric(horizontal=6, vertical=2),
+            padding=ft.Padding(left=6, top=2, right=6, bottom=2),
         )
 
     # UA preview
     ua_preview = None
     if ua:
         short_ua = ua[:60] + "..." if len(ua) > 60 else ua
-        ua_preview = ft.Text(short_ua, size=11, color=ft.Colors.GREY_500, max_lines=1)
+        ua_preview = ft.Text(
+            short_ua, size=11, color=ft.Colors.GREY_500, max_lines=1)
 
     # Notes preview
     notes_preview = None
     if notes:
         short_notes = notes[:80] + "..." if len(notes) > 80 else notes
-        notes_preview = ft.Text(short_notes, size=11, color=ft.Colors.GREY_500, italic=True, max_lines=1)
+        notes_preview = ft.Text(
+            short_notes, size=11, color=ft.Colors.GREY_500, italic=True, max_lines=1)
 
     # Action buttons
     run_stop_btn = ft.IconButton(
@@ -105,8 +107,13 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=12,
         ),
-        padding=ft.padding.symmetric(horizontal=16, vertical=8),
-        border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+        padding=ft.Padding(left=16, top=8, right=16, bottom=8),
+        border=ft.Border(
+            ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+            ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+            ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+            ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+        ),
         border_radius=8,
-        margin=ft.margin.only(bottom=4),
+        margin=ft.Margin(left=0, top=0, right=0, bottom=4),
     )

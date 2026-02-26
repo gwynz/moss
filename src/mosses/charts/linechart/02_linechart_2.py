@@ -82,7 +82,7 @@ def moss():
                             color=ft.Colors.with_opacity(
                                 0.5, ft.Colors.PRIMARY),
                         ),
-                        margin=ft.margin.only(top=10),
+                        margin=ft.Margin(left=0, top=10, right=0, bottom=0),
                     ),
                 ),
                 fch.ChartAxisLabel(
@@ -95,7 +95,7 @@ def moss():
                             color=ft.Colors.with_opacity(
                                 0.5, ft.Colors.PRIMARY),
                         ),
-                        margin=ft.margin.only(top=10),
+                        margin=ft.Margin(left=0, top=10, right=0, bottom=0),
                     ),
                 ),
                 fch.ChartAxisLabel(
@@ -108,7 +108,7 @@ def moss():
                             color=ft.Colors.with_opacity(
                                 0.5, ft.Colors.PRIMARY),
                         ),
-                        margin=ft.margin.only(top=10),
+                        margin=ft.Margin(left=0, top=10, right=0, bottom=0),
                     ),
                 ),
             ],

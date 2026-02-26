@@ -17,7 +17,7 @@ hover_title_style = ft.TextStyle(
     size=16,
     color=ft.Colors.WHITE,
     weight=ft.FontWeight.BOLD,
-    shadow=ft.BoxShadow(blur_radius=2, color=ft.Colors.BLACK54),
+    shadow=ft.BoxShadow(blur_radius=2, color=ft.Colors.BLACK_54),
 )
 normal_badge_size = 40
 hover_badge_size = 50

@@ -16,7 +16,7 @@ hover_title_style = ft.TextStyle(
     size=22,
     color=ft.Colors.WHITE,
     weight=ft.FontWeight.BOLD,
-    shadow=ft.BoxShadow(blur_radius=2, color=ft.Colors.BLACK54),
+    shadow=ft.BoxShadow(blur_radius=2, color=ft.Colors.BLACK_54),
 )
 
 
