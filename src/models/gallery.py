@@ -38,6 +38,12 @@ class Gallery:
     control_groups: list[ControlGroup] = field(
         default_factory=lambda: [
             ControlGroup(
+                name="profiles",
+                label="Profiles",
+                icon=ft.Icons.BROWSER_UPDATED,
+                selected_icon=ft.Icons.BROWSER_UPDATED_SHARP,
+            ),
+            ControlGroup(
                 name="layout",
                 label="Layout",
                 icon=ft.Icons.GRID_VIEW,
@@ -115,7 +121,8 @@ class Gallery:
     _INDEX_FILE_NAME: ClassVar[str] = "index.py"
 
     def __post_init__(self):
-        self._examples_root = Path(__file__).resolve().parent.parent / "examples"
+        self._examples_root = Path(
+            __file__).resolve().parent.parent / "examples"
         self.import_modules()
 
     def get_control_group(self, group_name: str) -> ControlGroup | None:
@@ -153,9 +160,12 @@ class Gallery:
         for control_group in self.control_groups:
             control_group.controls.clear()
             for control_dir in self.list_control_dirs(control_group.name):
-                grid_item = self._build_grid_item(control_group.name, control_dir)
+                grid_item = self._build_grid_item(
+                    control_group.name, control_dir)
                 control_group.controls.append(grid_item)
-            control_group.controls.sort(key=lambda item: (item.name or item.id).lower())
+            control_group.controls.sort(
+                key=lambda item: (item.name or item.id).lower())
+            print(control_group.controls)
 
     def _build_grid_item(self, group_name: str, control_dir: str) -> ControlItem:
         grid_item = ControlItem(id=control_dir, name=control_dir)
@@ -167,8 +177,9 @@ class Gallery:
                 continue
 
             example_item = ExampleItem(
-                name=getattr(module, "name"),
-                file_name=str(file_path.relative_to(self._examples_root).as_posix()),
+                name=getattr(module, "name", file_path.stem),
+                file_name=str(file_path.relative_to(
+                    self._examples_root).as_posix()),
                 order=self._parse_example_order(file_path.name),
                 example=getattr(module, "example", None),
             )

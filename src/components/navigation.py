@@ -58,9 +58,9 @@ def ThemeModeToggle():
                 tooltip="Toggle theme brightness",
                 on_click=lambda: theme.toggle_mode(),
             ),
-            ft.Text(
-                value="Light mode" if theme.mode == ft.ThemeMode.LIGHT else "Dark mode"
-            ),
+            # ft.Text(
+            #     value="Light mode" if theme.mode == ft.ThemeMode.LIGHT else "Dark mode"
+            # ),
         ]
     )
 
@@ -74,25 +74,28 @@ def ThemeSeedColor():
                 icon=ft.Icons.COLOR_LENS_OUTLINED,
                 tooltip="Select theme seed color",
                 items=[
-                    PopupColorItem(color=ft.Colors.DEEP_PURPLE, name="Deep purple"),
+                    PopupColorItem(color=ft.Colors.DEEP_PURPLE,
+                                   name="Deep purple"),
                     PopupColorItem(color=ft.Colors.INDIGO, name="Indigo"),
-                    PopupColorItem(color=ft.Colors.BLUE, name="Blue (default)"),
+                    PopupColorItem(color=ft.Colors.BLUE,
+                                   name="Blue (default)"),
                     PopupColorItem(color=ft.Colors.TEAL, name="Teal"),
                     PopupColorItem(color=ft.Colors.GREEN, name="Green"),
                     PopupColorItem(color=ft.Colors.YELLOW, name="Yellow"),
                     PopupColorItem(color=ft.Colors.ORANGE, name="Orange"),
-                    PopupColorItem(color=ft.Colors.DEEP_ORANGE, name="Deep orange"),
+                    PopupColorItem(color=ft.Colors.DEEP_ORANGE,
+                                   name="Deep orange"),
                     PopupColorItem(color=ft.Colors.PINK, name="Pink"),
                 ],
             ),
-            ft.Text(theme.seed_color.name.replace("_", " ").title()),
+            # ft.Text(theme.seed_color.name.replace("_", " ").title()),
         ]
     )
 
 
 @ft.component
 def ThemeOptions():
-    return ft.Column(
+    return ft.Row(
         controls=[
             ThemeModeToggle(),
             ThemeSeedColor(),

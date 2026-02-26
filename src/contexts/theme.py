@@ -14,8 +14,8 @@ class ThemeContextValue:
 
 ThemeContext = ft.create_context(
     ThemeContextValue(
-        mode=ft.ThemeMode.LIGHT,
-        seed_color=ft.Colors.BLUE,
+        mode=ft.ThemeMode.DARK,
+        seed_color=ft.Colors.GREEN,
         toggle_mode=lambda: None,
         set_seed_color=lambda color: None,
     )

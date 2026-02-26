@@ -9,7 +9,7 @@ import flet as ft
 class AppModel:
     route: str
     theme_mode: ft.ThemeMode = ft.ThemeMode.DARK
-    theme_color: ft.Colors = ft.Colors.BLUE
+    theme_color: ft.Colors = ft.Colors.GREEN
 
     def route_change(self, e: ft.RouteChangeEvent):
         print("Route changed from:", self.route, "to:", e.route)

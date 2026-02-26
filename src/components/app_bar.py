@@ -15,10 +15,12 @@ def AppBar():
                 content=ft.Column(
                     tight=True,
                     controls=[
-                        ft.Text(f"Gallery version: {get_app_version()}"),
+                        ft.Text(f"Moss version: {get_app_version()}"),
                         ft.Text(f"Flet version: {flet.version.flet_version}"),
-                        ft.Text(f"Flutter version: {flet.version.flutter_version}"),
-                        ft.Text(f"Python version: {platform.python_version()}"),
+                        ft.Text(
+                            f"Flutter version: {flet.version.flutter_version}"),
+                        ft.Text(
+                            f"Python version: {platform.python_version()}"),
                     ],
                 ),
                 actions=[
@@ -33,7 +35,7 @@ def AppBar():
         title=ft.Row(
             [
                 ft.Image(src="logo.svg", width=30),
-                ft.Text("Flet Gallery"),
+                ft.Text("Moss"),
             ]
         ),
         center_title=True,

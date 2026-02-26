@@ -33,7 +33,8 @@ def App(gallery: Gallery) -> ft.View:
             toggle_mode=toggle_mode,
             set_seed_color=set_theme_color,
         ),
-        dependencies=[app.theme_mode, app.theme_color, toggle_mode, set_theme_color],
+        dependencies=[app.theme_mode, app.theme_color,
+                      toggle_mode, set_theme_color],
     )
 
     navigate_callback = ft.use_callback(
@@ -76,9 +77,10 @@ def App(gallery: Gallery) -> ft.View:
                 route="/",
                 appbar=AppBar(),
                 controls=[
-                    DiagnosticsView(key="diagnostics-view")
-                    if app.route == "/__diag"
-                    else GalleryView(gallery, key="gallery-view")
+                    # DiagnosticsView(key="diagnostics-view")
+                    # if app.route == "/__diag"
+                    # else GalleryView(gallery, key="gallery-view")
+                    GalleryView(gallery)
                 ],
             ),
         ),

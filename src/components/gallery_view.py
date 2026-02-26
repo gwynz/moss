@@ -33,6 +33,8 @@ def GalleryView(gallery: Gallery):
                 (
                     ControlView(control)
                     if control
+                    else ControlView(group.controls[0])
+                    if group and group.controls and group.controls[0].id == "index"
                     else GroupView(group)
                     if group
                     else ft.Text("Unknown group")
