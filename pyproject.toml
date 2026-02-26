@@ -13,7 +13,9 @@ dependencies = [
   "flet-video",
   "flet",
   "flet-web",
-  "objgraph"
+  "objgraph",
+  "playwright",
+  "aiosqlite"
 ]
 
 [tool.flet]

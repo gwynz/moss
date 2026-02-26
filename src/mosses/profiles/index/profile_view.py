@@ -1,11 +1,186 @@
+import asyncio
+
 import flet as ft
 
-name = "Profile View"
+from models.profile_model import ProfileManagerModel
+from services._db import init_db
+from services import _profile_repo as repo
+from services import _browser_engine as engine
+from mosses.profiles.index._profile_list import ProfileList
+from mosses.profiles.index._profile_form import ProfileForm
+
+name = "Profile Manager"
 
 
 def moss():
-    return ft.Column(
-        [
-            ft.Text("hello word!!"),
-        ]
+    return ProfileManager()
+
+
+@ft.component
+def ProfileManager():
+    model, set_model = ft.use_state(ProfileManagerModel())
+    confirm_delete, set_confirm_delete = ft.use_state(
+        None)  # profile dict or None
+
+    async def startup():
+        try:
+            await init_db()
+            profiles = await repo.list_profiles()
+            model.set_profiles(profiles)
+            # Sync running state from engine
+            for p in profiles:
+                if engine.is_running(p["id"]):
+                    model.set_running(p["id"], True)
+        except Exception as e:
+            model.error_message = str(e)
+        finally:
+            model.is_loading = False
+
+    ft.on_mounted(lambda: asyncio.create_task(startup()))
+
+    async def refresh_profiles():
+        profiles = await repo.list_profiles()
+        model.set_profiles(profiles)
+
+    # --- Actions ---
+    async def on_run(profile):
+        pid = profile["id"]
+        try:
+            fresh = await repo.get_profile(pid)
+            if fresh:
+                ok = await engine.launch_profile(fresh)
+                if ok:
+                    model.set_running(pid, True)
+                    await refresh_profiles()
+        except Exception as e:
+            model.error_message = f"Launch failed: {e}"
+
+    async def on_stop(profile):
+        pid = profile["id"]
+        try:
+            await engine.close_profile(pid)
+            model.set_running(pid, False)
+            await refresh_profiles()
+        except Exception as e:
+            model.error_message = f"Stop failed: {e}"
+
+    def on_edit(profile):
+        model.start_edit(profile)
+
+    def on_delete_request(profile):
+        set_confirm_delete(profile)
+
+    async def on_delete_confirm():
+        profile = confirm_delete
+        set_confirm_delete(None)
+        if profile:
+            await repo.delete_profile(profile["id"])
+            await refresh_profiles()
+
+    def on_delete_cancel():
+        set_confirm_delete(None)
+
+    async def on_save(form_data):
+        if model.form_mode == "add":
+            name = form_data.pop("name", "Unnamed")
+            # Remove keys that aren't DB columns
+            form_data.pop("id", None)
+            form_data.pop("created_at", None)
+            form_data.pop("updated_at", None)
+            form_data.pop("last_launched", None)
+            form_data.pop("is_running", None)
+            await repo.create_profile(name, **form_data)
+        elif model.form_mode == "edit" and model.editing_profile_id:
+            pid = model.editing_profile_id
+            form_data.pop("id", None)
+            form_data.pop("created_at", None)
+            form_data.pop("updated_at", None)
+            form_data.pop("last_launched", None)
+            form_data.pop("is_running", None)
+            await repo.update_profile(pid, **form_data)
+        model.back_to_list()
+        await refresh_profiles()
+
+    def on_cancel():
+        model.back_to_list()
+
+    # --- Render ---
+    if model.is_loading:
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.ProgressRing(),
+                    ft.Text("Loading profiles..."),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=16,
+            ),
+            alignment=ft.Alignment.CENTER,
+            expand=True,
+        )
+
+    # Delete confirmation dialog
+    dialog = None
+    if confirm_delete:
+        dialog = ft.AlertDialog(
+            open=True,
+            modal=True,
+            title=ft.Text("Delete Profile"),
+            content=ft.Text(
+                f'Delete "{confirm_delete.get("name", "")}"? This cannot be undone.'),
+            actions=[
+                ft.TextButton("Cancel", on_click=lambda _: on_delete_cancel()),
+                ft.FilledButton(
+                    "Delete",
+                    on_click=lambda _: asyncio.create_task(
+                        on_delete_confirm()),
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.RED),
+                ),
+            ],
+        )
+
+    # Error banner
+    error_banner = None
+    if model.error_message:
+        def dismiss_error(_):
+            model.error_message = ""
+
+        error_banner = ft.Banner(
+            open=True,
+            bgcolor=ft.Colors.ERROR_CONTAINER,
+            content=ft.Text(model.error_message),
+            actions=[ft.TextButton("Dismiss", on_click=dismiss_error)],
+        )
+
+    children = []
+    if error_banner:
+        children.append(error_banner)
+
+    if model.form_mode == "list":
+        children.append(
+            ProfileList(
+                model=model,
+                on_run=lambda p: asyncio.create_task(on_run(p)),
+                on_stop=lambda p: asyncio.create_task(on_stop(p)),
+                on_edit=on_edit,
+                on_delete=on_delete_request,
+            )
+        )
+    else:
+        children.append(
+            ProfileForm(
+                profile=model.editing_profile,
+                is_edit=(model.form_mode == "edit"),
+                on_save=lambda data: asyncio.create_task(on_save(data)),
+                on_cancel=on_cancel,
+            )
+        )
+
+    if dialog:
+        children.append(dialog)
+
+    return ft.Container(
+        content=ft.Column(children, expand=True, spacing=8),
+        padding=16,
+        expand=True,
     )
