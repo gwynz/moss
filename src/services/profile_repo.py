@@ -139,3 +139,47 @@ async def set_running(profile_id: str, running: bool) -> None:
 async def set_last_launched(profile_id: str) -> None:
     now = datetime.now(timezone.utc).isoformat()
     await update_profile(profile_id, last_launched=now)
+
+
+async def import_profiles(profiles_data: list[dict]) -> int:
+    """
+    Imports profiles from a list of dictionaries.
+    Skips profiles with IDs that already exist in the database.
+    Returns the number of profiles successfully imported.
+    """
+    conn = await get_connection()
+    try:
+        # Get existing IDs to avoid duplicates
+        cursor = await conn.execute("SELECT id FROM profiles")
+        rows = await cursor.fetchall()
+        existing_ids = {row["id"] for row in rows}
+
+        imported_count = 0
+        for entry in profiles_data:
+            if entry.get("id") in existing_ids:
+                continue
+
+            # Filter data to only include valid columns that exist in the schema
+            cols = []
+            vals = []
+            for col in _ALL_COLUMNS:
+                if col in entry and entry[col] is not None:
+                    cols.append(col)
+                    vals.append(entry[col])
+
+            if not cols:
+                continue
+
+            placeholders = ", ".join("?" for _ in cols)
+            col_names = ", ".join(cols)
+
+            await conn.execute(
+                f"INSERT INTO profiles ({col_names}) VALUES ({placeholders})",
+                vals,
+            )
+            imported_count += 1
+
+        await conn.commit()
+        return imported_count
+    finally:
+        await conn.close()

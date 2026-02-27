@@ -5,7 +5,11 @@
       "mcp__context7__query-docs",
       "Bash(xargs grep:*)",
       "Bash(uv add:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(git:*)",
+      "WebSearch",
+      "Bash(pip show:*)",
+      "Bash(python:*)"
     ]
   }
 }
