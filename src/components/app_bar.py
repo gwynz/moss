@@ -34,8 +34,8 @@ def AppBar():
     return ft.AppBar(
         title=ft.Row(
             [
-                ft.Image(src="logo.svg", width=30),
-                ft.Text("Moss"),
+                ft.Image(src="logo.png", width=30),
+                ft.Text("Moss v1"),
             ]
         ),
         center_title=True,

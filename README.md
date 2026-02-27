@@ -1,78 +1,68 @@
-# Moss
+<p align="center">
+  <img src="src/assets/logo.png" width="150" alt="Moss Logo">
+</p>
 
-Moss is a powerful Flet-based management tool for antidetect browsers, proxies, and web3 wallets. It provides a centralized interface to manage your digital identities and automation workflows.
+<h1 align="center">Moss</h1>
 
-## Features
+<p align="center">
+  <strong>A powerful management tool for antidetect browsers, proxies, and digital identities.</strong>
+</p>
 
-- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital fingerprints.
-- **Proxy Management**: Seamlessly manage and assign proxies to different browser profiles.
-- **Web3 Wallet Management**: Securely manage multiple web3 wallets.
-- **Wallet Integration**: Connect wallets to MetaMask browser extensions (coming soon).
+---
 
-## Coming Soon
+Moss is a professional Flet-based interface designed to centralize the management of browser profiles, proxies, and Web3 wallets. It provides a secure and organized environment for automation workflows and digital identity management.
 
-- **Agent Creation**: Create AI agents to perform automated tasks within the browser.
-- **Task Scheduling**: Schedule automated browser tasks.
-- **Script Execution**: Run custom scripts directly within the managed browser environments.
+## 🚀 Key Features
 
-## Run the app
+- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital footprints to maintain privacy and security.
+- **Proxy Management**: Seamlessly manage, verify, and assign proxies to specific profiles.
+- **Web3 Wallet Management**: Integrated multi-wallet management for blockchain operations.
+- **Cross-Platform**: Built with Flet (Flutter), providing a consistent native experience across Windows, macOS, Linux, and Android.
 
-### uv (Recommended)
+## 🛠️ Installation & Running
 
-Run as a desktop app:
+### Using [uv](https://github.com/astral-sh/uv) (Recommended)
 
+Run as a desktop application:
 ```bash
 uv run flet run
 ```
 
-Run as a web app:
-
+Run as a web application:
 ```bash
 uv run flet run --web
 ```
 
-### Poetry
+### Using Poetry
 
-Install dependencies from `pyproject.toml`:
-
+Install dependencies:
 ```bash
 poetry install
 ```
 
-Run as a desktop app:
-
+Run implementation:
 ```bash
 poetry run flet run
 ```
 
-Run as a web app:
+## 📦 Building for Distribution
 
-```bash
-poetry run flet run --web
-```
+| Platform | Command |
+| :--- | :--- |
+| **Windows** | `flet build windows -v` |
+| **Android** | `flet build apk -v` |
+| **macOS** | `flet build macos -v` |
+| **Linux** | `flet build linux -v` |
 
-## Build the app
+## 🔮 Roadmap
 
-### Android
+- [ ] **AI Agent Integration**: Create and manage AI agents for browser-based automation.
+- [ ] **Advanced Task Scheduling**: Orchestrate complex workflows with precise timing.
+- [ ] **Scripting Engine**: Custom Python script execution within isolated browser environments.
+- [ ] **Wallet Extension Support**: Deep integration with MetaMask and other browser extensions.
 
-```bash
-flet build apk -v
-```
+---
 
-### Windows
-
-```bash
-flet build windows -v
-```
-
-### macOS
-
-```bash
-flet build macos -v
-```
-
-### Linux
-
-```bash
-flet build linux -v
-```
+<p align="center">
+  Built with ❤️ using <a href="https://flet.dev">Flet</a> and <a href="https://python.org">Python</a>.
+</p>

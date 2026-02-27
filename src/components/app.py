@@ -52,6 +52,7 @@ def App(moss: Moss) -> ft.View:
     def on_mounted():
         print("Page size:", ft.context.page.width, ft.context.page.height)
         ft.context.page.title = "Moss"
+        ft.context.page.window_icon = "logo.png"
         ft.context.page.fonts = {
             "Roboto Mono": "RobotoMono-VariableFont_wght.ttf",
             "RobotoSlab": "RobotoSlab[wght].ttf",

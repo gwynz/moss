@@ -38,6 +38,19 @@ async def get_proxy(proxy_id: str) -> dict | None:
         await conn.close()
 
 
+async def find_proxy_by_host_port(host: str, port: str) -> dict | None:
+    conn = await get_connection()
+    try:
+        cursor = await conn.execute(
+            f"SELECT {', '.join(_ALL_COLUMNS)} FROM proxies WHERE proxy_host = ? AND proxy_port = ?",
+            (host, str(port)),
+        )
+        row = await cursor.fetchone()
+        return _row_to_dict(row) if row else None
+    finally:
+        await conn.close()
+
+
 async def create_proxy(name: str, **kwargs) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     proxy_id = str(uuid.uuid4())

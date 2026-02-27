@@ -19,6 +19,7 @@ dependencies = [
   "camoufox[geoip]",
   "browserforge>=1.2.4",
   "httpx>=1.0.dev3",
+  "pyperclip>=1.11.0",
 ]
 
 [tool.flet]

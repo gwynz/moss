@@ -14,14 +14,32 @@ class ProxyManagerModel:
     test_results: dict = field(default_factory=dict)  # proxy_id -> status_text
     error_message: str = ""
     is_loading: bool = True
+    import_dialog_open: bool = False
+    import_data: str = ""
+    confirm_delete: dict | None = None
+    page: int = 1
+    page_size: int = 12
+    total_pages: int = 1
 
     def set_proxies(self, proxies: list):
         self.proxies = proxies
+        self.page = 1
         self._apply_filter()
 
     def set_search(self, query: str):
         self.search_query = query
+        self.page = 1
         self._apply_filter()
+
+    def set_page(self, page: int):
+        if 1 <= page <= self.total_pages:
+            self.page = page
+
+    @property
+    def paged_proxies(self):
+        start = (self.page - 1) * self.page_size
+        end = start + self.page_size
+        return self.filtered_proxies[start:end]
 
     def _apply_filter(self):
         q = self.search_query.lower().strip()
@@ -34,6 +52,11 @@ class ProxyManagerModel:
                 or q in p.get("proxy_host", "").lower()
                 or q in p.get("notes", "").lower()
             ]
+
+        import math
+        self.total_pages = max(1, math.ceil(len(self.filtered_proxies) / self.page_size))
+        if self.page > self.total_pages:
+            self.page = self.total_pages
 
     def start_add(self):
         self.form_mode = "add"
