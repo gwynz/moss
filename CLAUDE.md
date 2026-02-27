@@ -22,7 +22,17 @@ There is no test suite. The app entry point is `src/main.py` and Flet uses `[too
 
 ## Architecture
 
-This is a **Moss controls gallery** — an interactive browser for Flet UI components built using Flet's React-inspired component model (hooks, contexts, observable state).
+**Moss** is a professional management tool for antidetect browsers, proxies, and digital identities. It is built as an interactive browser for internal UI modules ("mosses") using Flet's React-inspired component model (hooks, contexts, observable state).
+
+### Core Architecture Layers
+
+1.  **UI Layer (Flet Hooks)**: Functional components with hooks (`use_state`, `use_memo`, `use_context`).
+2.  **State Layer (Observable Models)**: `@ft.observable` + `@dataclass` for reactive state (see `src/models/`).
+3.  **Service Layer**:
+    *   **Browser Engine**: `AsyncCamoufox` with `browserforge` fingerprints (see `src/services/browser_engine.py`).
+    *   **Persistence**: Async SQLite (`aiosqlite`) managed in `src/services/db.py`.
+    *   **Repositories**: `profile_repo.py` and `proxy_repo.py` handle data logic.
+4.  **Plugin System (Mosses)**: Dynamic discovery of modules in `src/mosses/`.
 
 ### Component model
 
