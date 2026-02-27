@@ -132,7 +132,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ft.Divider(),
         ft.Text("Software", size=14, weight=ft.FontWeight.W_500),
         ft.Container(height=4),
-        text_field("User Agent", "user_agent", disabled=True),
+        dropdown_field("User Agent", "user_agent", USER_AGENTS, disabled=True),
         dropdown_field("Platform", "platform", PLATFORMS, disabled=True),
         dropdown_field("Language", "language", LANGUAGES, disabled=True),
         dropdown_field("Timezone", "timezone", TIMEZONES, disabled=True),
