@@ -57,21 +57,10 @@ async def launch_profile(profile: dict) -> bool:
     screen_width = profile.get("screen_width")
     screen_height = profile.get("screen_height")
     if screen_width and screen_height:
-        try:
-            w, h = int(screen_width), int(screen_height)
-            launch_kwargs["screen"] = Screen(max_width=w, max_height=h)
-            launch_kwargs["window"] = (w, h)
-        except (ValueError, TypeError):
-            pass
-
-    # Map OS if available in profile
-    platform = profile.get("platform", "").lower()
-    if "win" in platform:
-        launch_kwargs["os"] = "windows"
-    elif "mac" in platform:
-        launch_kwargs["os"] = "macos"
-    elif "linux" in platform:
-        launch_kwargs["os"] = "linux"
+        w, h = int(screen_width), int(screen_height)
+        launch_kwargs["window"] = (w, h)
+        launch_kwargs["screen"] = Screen(
+            max_width=w, max_height=h)
 
     browser_manager = AsyncCamoufox(**launch_kwargs)
     result = await browser_manager.__aenter__()

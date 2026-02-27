@@ -11,10 +11,13 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     proxy_port = profile.get("proxy_port", 0)
     notes = profile.get("notes", "")
     is_running = model.is_running(profile["id"])
+    is_starting = model.is_starting(profile["id"])
     ua = profile.get("user_agent", "")
 
     # Status indicator
-    status_dot = ft.Container(
+    status_indicator = ft.ProgressRing(
+        width=12, height=12, stroke_width=2
+    ) if is_starting else ft.Container(
         width=10,
         height=10,
         border_radius=5,
@@ -54,6 +57,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         tooltip="Stop" if is_running else "Run",
         on_click=lambda _: on_stop(profile) if is_running else on_run(profile),
         icon_size=20,
+        disabled=is_starting,
     )
 
     edit_btn = ft.IconButton(
@@ -61,7 +65,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         tooltip="Edit",
         on_click=lambda _: on_edit(profile),
         icon_size=20,
-        disabled=is_running,
+        disabled=is_running or is_starting,
     )
 
     delete_btn = ft.IconButton(
@@ -70,7 +74,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         icon_color=ft.Colors.RED_400,
         on_click=lambda _: on_delete(profile),
         icon_size=20,
-        disabled=is_running,
+        disabled=is_running or is_starting,
     )
 
     info_widgets: list[ft.Control] = [
@@ -86,7 +90,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         details.append(notes_preview)
 
     row_controls: list[ft.Control] = [
-        status_dot,
+        status_indicator,
         ft.Column(
             [
                 ft.Row(info_widgets, spacing=8),

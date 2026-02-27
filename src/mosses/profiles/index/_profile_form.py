@@ -61,7 +61,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         on_save(form_data)
 
     # --- Helper to build labeled text fields ---
-    def text_field(label, key, **kwargs):
+    def text_field(label: str, key: str, **kwargs):
         return ft.TextField(
             label=label,
             value=str(form_data.get(key, "") or ""),
@@ -70,7 +70,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             **kwargs,
         )
 
-    def number_field(label, key, **kwargs):
+    def number_field(label: str, key: str, **kwargs):
         val = form_data.get(key)
         return ft.TextField(
             label=label,

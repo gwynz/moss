@@ -45,6 +45,9 @@ def ProfileManager():
     # --- Actions ---
     async def on_run(profile):
         pid = profile["id"]
+        if model.is_starting(pid) or model.is_running(pid):
+            return
+        model.set_starting(pid, True)
         try:
             fresh = await repo.get_profile(pid)
             if fresh:
@@ -54,6 +57,8 @@ def ProfileManager():
                     await refresh_profiles()
         except Exception as e:
             model.error_message = f"Launch failed: {e}"
+        finally:
+            model.set_starting(pid, False)
 
     async def on_stop(profile):
         pid = profile["id"]
@@ -70,14 +75,14 @@ def ProfileManager():
     def on_delete_request(profile):
         set_confirm_delete(profile)
 
-    async def on_delete_confirm():
+    async def on_delete_confirm(e):
         profile = confirm_delete
         set_confirm_delete(None)
         if profile:
             await repo.delete_profile(profile["id"])
             await refresh_profiles()
 
-    def on_delete_cancel():
+    def on_delete_cancel(e):
         set_confirm_delete(None)
 
     async def on_save(form_data):
@@ -120,37 +125,35 @@ def ProfileManager():
         )
 
     # Delete confirmation dialog
-    dialog = None
-    if confirm_delete:
-        dialog = ft.AlertDialog(
-            open=True,
-            modal=True,
-            title=ft.Text("Delete Profile"),
-            content=ft.Text(
-                f'Delete "{confirm_delete.get("name", "")}"? This cannot be undone.'),
-            actions=[
-                ft.TextButton("Cancel", on_click=lambda _: on_delete_cancel()),
-                ft.FilledButton(
-                    "Delete",
-                    on_click=lambda _: asyncio.create_task(
-                        on_delete_confirm()),
-                    style=ft.ButtonStyle(bgcolor=ft.Colors.RED),
-                ),
-            ],
-        )
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Delete Profile"),
+        open=True if confirm_delete else False,
+        content=ft.Text(
+            f'Delete tis profile"? This cannot be undone.'),
+        actions=[
+            ft.TextButton("Cancel", on_click=on_delete_cancel),
+            ft.FilledButton(
+                "Delete",
+                on_click=lambda e: asyncio.create_task(
+                    on_delete_confirm(e)),
+                style=ft.ButtonStyle(bgcolor=ft.Colors.RED),
+            ),
+        ],
+    )
 
     # Error banner
     error_banner = None
-    if model.error_message:
-        def dismiss_error(_):
-            model.error_message = ""
 
-        error_banner = ft.Banner(
-            open=True,
-            bgcolor=ft.Colors.ERROR_CONTAINER,
-            content=ft.Text(model.error_message),
-            actions=[ft.TextButton("Dismiss", on_click=dismiss_error)],
-        )
+    def dismiss_error(_):
+        model.error_message = ""
+
+    error_banner = ft.Banner(
+        open=True if model.error_message else False,
+        bgcolor=ft.Colors.ERROR_CONTAINER,
+        content=ft.Text(model.error_message),
+        actions=[ft.TextButton("Dismiss", on_click=dismiss_error)],
+    )
 
     children = []
     if error_banner:

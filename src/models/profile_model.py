@@ -14,6 +14,7 @@ class ProfileManagerModel:
     search_query: str = ""
     is_loading: bool = True
     running_profiles: set = field(default_factory=set)
+    starting_profiles: set = field(default_factory=set)
     error_message: str = ""
 
     def set_profiles(self, profiles: list):
@@ -54,8 +55,18 @@ class ProfileManagerModel:
     def set_running(self, profile_id: str, running: bool):
         if running:
             self.running_profiles = self.running_profiles | {profile_id}
+            self.starting_profiles = self.starting_profiles - {profile_id}
         else:
             self.running_profiles = self.running_profiles - {profile_id}
 
+    def set_starting(self, profile_id: str, starting: bool):
+        if starting:
+            self.starting_profiles = self.starting_profiles | {profile_id}
+        else:
+            self.starting_profiles = self.starting_profiles - {profile_id}
+
     def is_running(self, profile_id: str) -> bool:
         return profile_id in self.running_profiles
+
+    def is_starting(self, profile_id: str) -> bool:
+        return profile_id in self.starting_profiles
