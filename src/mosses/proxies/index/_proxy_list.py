@@ -3,8 +3,14 @@ import flet as ft
 
 @ft.component
 def ProxyList(model, on_edit, on_delete, on_test):
-    def on_search(e):
-        model.set_search(e.control.value)
+    # Use local state for the input field text
+    search_val, set_search_val = ft.use_state(model.search_query)
+
+    def on_search_submit(_=None):
+        model.set_search(search_val)
+
+    def on_search_change(e):
+        set_search_val(e.control.value)
 
     def proxy_card(proxy):
         test_status = model.test_results.get(proxy["id"], "")
@@ -48,22 +54,36 @@ def ProxyList(model, on_edit, on_delete, on_test):
             )
         )
 
-    return ft.Column([
-        ft.Row([
+    toolbar = ft.Row(
+        controls=[
+            ft.Text("Proxies", size=20, weight=ft.FontWeight.BOLD, expand=True),
             ft.TextField(
+                value=search_val,
                 hint_text="Search proxies...",
-                prefix_icon=ft.Icons.SEARCH,
-                expand=True,
-                on_change=on_search,
-                value=model.search_query,
+                width=250,
+                height=40,
+                text_size=13,
+                content_padding=ft.Padding(left=8, top=0, right=8, bottom=4),
+                on_change=on_search_change,
+                on_submit=on_search_submit,
+            ),
+            ft.IconButton(
+                icon=ft.Icons.SEARCH,
+                on_click=on_search_submit,
+                tooltip="Search",
             ),
             ft.FilledButton(
                 "Add Proxy",
                 icon=ft.Icons.ADD,
                 on_click=lambda _: model.start_add(),
             ),
-        ]),
-        ft.Divider(),
+        ],
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    return ft.Column([
+        toolbar,
         ft.GridView(
             controls=[proxy_card(p) for p in model.filtered_proxies],
             expand=True,
@@ -77,4 +97,4 @@ def ProxyList(model, on_edit, on_delete, on_test):
             alignment=ft.Alignment.CENTER,
             padding=40
         )
-    ], expand=True)
+    ], expand=True, spacing=12)
