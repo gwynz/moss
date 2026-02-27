@@ -61,22 +61,44 @@ CREATE TABLE IF NOT EXISTS profiles (
     user_data_dir TEXT NOT NULL DEFAULT '',
     is_running INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS proxies (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT NOT NULL DEFAULT '',
+    proxy_type TEXT NOT NULL, -- HTTP, SOCKS4, SOCKS5
+    proxy_host TEXT NOT NULL,
+    proxy_port INTEGER NOT NULL,
+    proxy_username TEXT NOT NULL DEFAULT '',
+    proxy_password TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
+
+
+_INITIALIZED = False
 
 
 async def get_connection() -> aiosqlite.Connection:
     _DB_DIR.mkdir(parents=True, exist_ok=True)
     conn = await aiosqlite.connect(str(_DB_PATH))
+    await conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = aiosqlite.Row
     return conn
 
 
 async def init_db() -> None:
+    global _INITIALIZED
+    if _INITIALIZED:
+        return
+
     conn = await get_connection()
     try:
         await conn.executescript(_SCHEMA)
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")
         await conn.commit()
+        _INITIALIZED = True
     finally:
         await conn.close()

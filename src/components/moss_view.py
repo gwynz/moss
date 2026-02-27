@@ -11,7 +11,7 @@ from utils.route import Route
 
 
 @ft.component
-def MossView(moss: Moss):
+def MossView(moss: Moss, key: str | None = None):
     route_context = ft.use_context(RouteContext)
     route = Route(route_context.route)
     group_name = route.group if route.group else moss.control_groups[0].name
@@ -24,6 +24,7 @@ def MossView(moss: Moss):
     )
 
     return ft.Row(
+        key=key,
         expand=True,
         controls=cast(
             list[ft.Control],
@@ -34,7 +35,7 @@ def MossView(moss: Moss):
                     ControlView(control)
                     if control
                     else ControlView(group.controls[0])
-                    if group and group.controls and group.controls[0].id == "index"
+                    if group and group.controls and "_index" in group.controls[0].id
                     else GroupView(group)
                     if group
                     else ft.Text("Unknown group")

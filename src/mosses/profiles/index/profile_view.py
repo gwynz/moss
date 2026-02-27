@@ -8,7 +8,6 @@ from services import _profile_repo as repo
 from services import _browser_engine as engine
 from mosses.profiles.index._profile_list import ProfileList
 from mosses.profiles.index._profile_form import ProfileForm
-
 name = "Profile Manager"
 
 

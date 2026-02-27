@@ -18,6 +18,7 @@ dependencies = [
   "aiosqlite",
   "camoufox[geoip]",
   "browserforge>=1.2.4",
+  "httpx>=1.0.dev3",
 ]
 
 [tool.flet]

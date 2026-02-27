@@ -37,6 +37,7 @@ def Moss(moss: MossItem):
             # ),
             ft.Container(
                 margin=ft.Margin.only(top=20, bottom=20),
+                key=moss.file_name,
                 content=moss.moss(),
                 clip_behavior=ft.ClipBehavior.NONE,
             )

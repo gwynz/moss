@@ -701,6 +701,7 @@ dependencies = [
     { name = "flet-charts" },
     { name = "flet-video" },
     { name = "flet-web" },
+    { name = "httpx" },
     { name = "objgraph" },
     { name = "playwright" },
 ]
@@ -721,6 +722,7 @@ requires-dist = [
     { name = "flet-charts" },
     { name = "flet-video" },
     { name = "flet-web" },
+    { name = "httpx", specifier = ">=1.0.dev3" },
     { name = "objgraph" },
     { name = "playwright" },
 ]

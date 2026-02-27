@@ -4,6 +4,28 @@ import socket
 import flet as ft
 
 
+async def test_proxy_tcp(proxy_type: str, proxy_host: str, proxy_port: int) -> tuple[bool, str]:
+    """Core TCP connection test logic."""
+    try:
+        try:
+            _, writer = await asyncio.wait_for(
+                asyncio.open_connection(proxy_host, int(proxy_port)),
+                timeout=5.0,
+            )
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            return True, f"OK — {proxy_type}://{proxy_host}:{proxy_port} reachable"
+        except asyncio.TimeoutError:
+            return False, "FAIL — Connection timed out"
+        except OSError as e:
+            return False, f"FAIL — {e}"
+    except Exception as e:
+        return False, f"Error: {e}"
+
+
 @ft.component
 def ProxyTest(proxy_type: str, proxy_host: str, proxy_port: int, proxy_username: str, proxy_password: str):
     status, set_status = ft.use_state("")
@@ -17,28 +39,9 @@ def ProxyTest(proxy_type: str, proxy_host: str, proxy_port: int, proxy_username:
         set_testing(True)
         set_status("Testing...")
 
-        try:
-            # Simple TCP connection test
-            loop = asyncio.get_event_loop()
-            try:
-                _, writer = await asyncio.wait_for(
-                    asyncio.open_connection(proxy_host, int(proxy_port)),
-                    timeout=5.0,
-                )
-                writer.close()
-                try:
-                    await writer.wait_closed()
-                except Exception:
-                    pass
-                set_status(f"OK — {proxy_type}://{proxy_host}:{proxy_port} reachable")
-            except asyncio.TimeoutError:
-                set_status("FAIL — Connection timed out")
-            except OSError as e:
-                set_status(f"FAIL — {e}")
-        except Exception as e:
-            set_status(f"Error: {e}")
-        finally:
-            set_testing(False)
+        _, msg = await test_proxy_tcp(proxy_type, proxy_host, int(proxy_port))
+        set_status(msg)
+        set_testing(False)
 
     status_color = ft.Colors.GREY_500
     if status.startswith("OK"):
@@ -54,7 +57,8 @@ def ProxyTest(proxy_type: str, proxy_host: str, proxy_port: int, proxy_username:
                 on_click=do_test,
                 disabled=testing,
             ),
-            ft.Text(status, size=12, color=status_color) if status else ft.Container(),
+            ft.Text(status, size=12,
+                    color=status_color) if status else ft.Container(),
         ],
         spacing=12,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,

@@ -77,10 +77,9 @@ def App(moss: Moss) -> ft.View:
                 route="/",
                 appbar=AppBar(),
                 controls=[
-                    # DiagnosticsView(key="diagnostics-view")
-                    # if app.route == "/__diag"
-                    # else MossView(moss, key="moss-view")
-                    MossView(moss)
+                    DiagnosticsView()
+                    if app.route == "/__diag"
+                    else MossView(moss)
                 ],
             ),
         ),

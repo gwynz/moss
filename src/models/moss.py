@@ -44,6 +44,12 @@ class Moss:
                 selected_icon=ft.Icons.BROWSER_UPDATED_SHARP,
             ),
             ControlGroup(
+                name="proxies",
+                label="Proxies",
+                icon=ft.Icons.NETWORK_WIFI,
+                selected_icon=ft.Icons.NETWORK_WIFI_SHARP,
+            ),
+            ControlGroup(
                 name="layout",
                 label="Layout",
                 icon=ft.Icons.GRID_VIEW,
@@ -167,7 +173,8 @@ class Moss:
                 key=lambda item: (item.name or item.id).lower())
 
     def _build_grid_item(self, group_name: str, control_dir: str) -> ControlItem:
-        grid_item = ControlItem(id=control_dir, name=control_dir)
+        grid_item = ControlItem(
+            id=f"{group_name}_{control_dir}", name=control_dir)
         for file_path in self.list_moss_files(group_name, control_dir):
             module = self._import_module(file_path)
             if file_path.name == self._INDEX_FILE_NAME:
@@ -182,6 +189,7 @@ class Moss:
                 order=self._parse_moss_order(file_path.name),
                 moss=getattr(module, "moss", None),
             )
+
             grid_item.mosses.append(moss_item)
         grid_item.mosses.sort(
             key=lambda item: (

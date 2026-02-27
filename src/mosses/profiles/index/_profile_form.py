@@ -1,12 +1,12 @@
 import flet as ft
 
 
+from mosses.profiles.index._proxy_test import ProxyTest
 from services._fingerprint_defaults import (
     USER_AGENTS, PLATFORMS, LANGUAGES,
     TIMEZONES, WEBGL_CONFIGS, HARDWARE_CONCURRENCIES, DEVICE_MEMORIES,
     COLOR_DEPTHS, PIXEL_RATIOS, WEBRTC_POLICIES, generate_random_fingerprint,
 )
-from mosses.profiles.index._proxy_test import ProxyTest
 
 
 @ft.component
