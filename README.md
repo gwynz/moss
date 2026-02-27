@@ -14,10 +14,33 @@ Moss is a professional Flet-based interface designed to centralize the managemen
 
 ## 🚀 Key Features
 
-- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital footprints to maintain privacy and security.
+- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital footprints using the **Camoufox** anti-detect engine.
 - **Proxy Management**: Seamlessly manage, verify, and assign proxies to specific profiles.
 - **Web3 Wallet Management**: Integrated multi-wallet management for blockchain operations.
 - **Cross-Platform**: Built with Flet (Flutter), providing a consistent native experience across Windows, macOS, Linux, and Android.
+
+## 🛠️ Installation & Running
+
+<br>
+
+## ⚙️ Technical Architecture
+
+Moss is built using a modern, reactive architecture inspired by React, implemented in Python.
+
+- **Frontend Framework**: [Flet](https://flet.dev) (built on Flutter)
+- **Browser Engine**: [Camoufox](https://github.com/ichndata/camoufox) (Anti-detect browser for high-fidelity fingerprinting)
+- **Component Model**: Functional components with React-inspired hooks (`use_state`, `use_memo`, `use_context`).
+- **State Management**: Observable state patterns using decorators and dataclasses.
+- **Dependency Management**: [uv](https://github.com/astral-sh/uv) (for ultra-fast environments) and [Poetry](https://python-poetry.org/).
+- **Dynamic Discovery**: Automatic plugin/module discovery using Python's `importlib`.
+
+### Tech Stack
+
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
+
+---
 
 ## 🛠️ Installation & Running
 
