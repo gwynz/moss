@@ -1,6 +1,6 @@
 import flet as ft
 
-from models.gallery import ControlItem, MossItem
+from models.moss import ControlItem, MossItem
 
 
 @ft.component
@@ -25,7 +25,7 @@ def Moss(moss: MossItem):
             #                     color=ft.Colors.ON_SURFACE_VARIANT,
             #                 ),
             #                 url=ft.Url(
-            #                     f"https://github.com/flet-dev/gallery/blob/main/src/mosses/{moss.file_name}",
+            #                     f"https://github.com/flet-dev/moss/blob/main/src/mosses/{moss.file_name}",
             #                     ft.UrlTarget.BLANK,
             #                 ),
             #             ),

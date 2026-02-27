@@ -6,19 +6,19 @@ from components.control_view import ControlView
 from components.group_view import GroupView
 from components.navigation import Navigation
 from contexts.route import RouteContext
-from models.gallery import Gallery
+from models.moss import ControlGroup, Moss
 from utils.route import Route
 
 
 @ft.component
-def GalleryView(gallery: Gallery):
+def MossView(moss: Moss):
     route_context = ft.use_context(RouteContext)
     route = Route(route_context.route)
-    group_name = route.group if route.group else gallery.control_groups[0].name
+    group_name = route.group if route.group else moss.control_groups[0].name
     control_id = route.control
-    group = gallery.get_control_group(group_name) if group_name else None
+    group = moss.get_control_group(group_name) if group_name else None
     control = (
-        gallery.get_control(group_name, control_id)
+        moss.get_control(group_name, control_id)
         if group_name and control_id
         else None
     )
@@ -28,7 +28,7 @@ def GalleryView(gallery: Gallery):
         controls=cast(
             list[ft.Control],
             [
-                Navigation(gallery.control_groups, route.group),
+                Navigation(moss.control_groups, route.group),
                 ft.VerticalDivider(width=1),
                 (
                     ControlView(control)

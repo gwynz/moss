@@ -2,7 +2,7 @@ import flet as ft
 
 from contexts.route import RouteContext
 from contexts.theme import ThemeContext
-from models.gallery import ControlGroup
+from models.moss import ControlGroup
 
 
 @ft.component

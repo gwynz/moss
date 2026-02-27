@@ -34,7 +34,7 @@ class ControlGroup:
 
 
 @dataclass
-class Gallery:
+class Moss:
     control_groups: list[ControlGroup] = field(
         default_factory=lambda: [
             ControlGroup(

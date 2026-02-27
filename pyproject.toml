@@ -1,11 +1,11 @@
 [project]
-name = "gallery"
+name = "moss"
 version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.14"
 authors = [
-    { name = "Flet developer", email = "you@moss.com" }
+    { name = "Moss developer", email = "you@moss.com" }
 ]
 dependencies = [
   "flet-charts",
@@ -23,9 +23,9 @@ dependencies = [
 [tool.flet]
 # Docs: https://flet.dev/docs/publish
 org = "com.mycompany"
-product = "gallery"
-company = "Flet"
-copyright = "Copyright (C) 2025 by Flet"
+product = "moss"
+company = "Moss"
+copyright = "Copyright (C) 2025 by Moss"
 
 [tool.flet.app]
 path = "src"

@@ -31,7 +31,7 @@ def DiagnosticsView() -> ft.Control:
                         on_click=dump_now,
                     ),
                     ft.OutlinedButton(
-                        "Back to gallery",
+                        "Back to moss",
                         icon=ft.Icons.ARROW_BACK,
                         on_click=lambda _: ft.context.page.go("/"),
                     ),

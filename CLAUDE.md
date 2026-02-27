@@ -22,7 +22,7 @@ There is no test suite. The app entry point is `src/main.py` and Flet uses `[too
 
 ## Architecture
 
-This is a **Flet controls gallery** — an interactive browser for Flet UI components built using Flet's React-inspired component model (hooks, contexts, observable state).
+This is a **Moss controls gallery** — an interactive browser for Flet UI components built using Flet's React-inspired component model (hooks, contexts, observable state).
 
 ### Component model
 
@@ -40,16 +40,16 @@ Contexts are created with `ft.create_context(default_value)` (see `src/contexts/
 ### Data flow
 
 ```
-Gallery (model)
+Moss (model)
   └─ scans src/mosses/<group>/<control>/ at startup via importlib
   └─ builds ControlGroup → ControlItem → MossItem tree
 
 App (component)
   └─ AppModel (observable) — holds route, theme_mode, theme_color
   └─ provides RouteContext + ThemeContext
-  └─ renders GalleryView or DiagnosticsView (route == "/__diag")
+  └─ renders MossView or DiagnosticsView (route == "/__diag")
 
-GalleryView
+MossView
   └─ Navigation (sidebar, groups)
   └─ GroupView (grid of controls) or ControlView (list of mosses)
 ```
@@ -60,14 +60,14 @@ Routes follow the pattern `/<group>/<control>`, e.g. `/buttons/button`. The `Rou
 
 ### Adding a new moss
 
-1. Create `src/mosses/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/gallery.py`).
+1. Create `src/mosses/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/moss.py`).
 2. Add `index.py` with module-level `name: str` and optional `description: str`.
 3. Add numbered moss files like `01_my_moss.py`. Each must export:
    - `name: str` — display name
    - `moss()` — callable returning a `ft.Control`
 
-The `Gallery` model auto-discovers and imports all moss modules at startup using `importlib`. Files prefixed with `_` are ignored. The numeric prefix (`01_`, `02_`, …) controls display order.
+The `Moss` model auto-discovers and imports all moss modules at startup using `importlib`. Files prefixed with `_` are ignored. The numeric prefix (`01_`, `02_`, …) controls display order.
 
 ### Adding a new control group
 
-Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/gallery.py` and create the matching `src/mosses/<name>/` directory.
+Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/moss.py` and create the matching `src/mosses/<name>/` directory.

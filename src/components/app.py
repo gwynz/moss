@@ -2,15 +2,15 @@ import flet as ft
 
 from components.app_bar import AppBar
 from components.diagnostics_view import DiagnosticsView
-from components.gallery_view import GalleryView
+from components.moss_view import MossView
 from contexts.route import RouteContext, RouteContextValue
 from contexts.theme import ThemeContext, ThemeContextValue
 from models.app_model import AppModel
-from models.gallery import Gallery
+from models.moss import Moss
 
 
 @ft.component
-def App(gallery: Gallery) -> ft.View:
+def App(moss: Moss) -> ft.View:
     app, _ = ft.use_state(AppModel(route=ft.context.page.route))
 
     # subscribe to page events as soon as possible
@@ -51,7 +51,7 @@ def App(gallery: Gallery) -> ft.View:
 
     def on_mounted():
         print("Page size:", ft.context.page.width, ft.context.page.height)
-        ft.context.page.title = "Flet controls gallery"
+        ft.context.page.title = "Moss"
         ft.context.page.fonts = {
             "Roboto Mono": "RobotoMono-VariableFont_wght.ttf",
             "RobotoSlab": "RobotoSlab[wght].ttf",
@@ -79,8 +79,8 @@ def App(gallery: Gallery) -> ft.View:
                 controls=[
                     # DiagnosticsView(key="diagnostics-view")
                     # if app.route == "/__diag"
-                    # else GalleryView(gallery, key="gallery-view")
-                    GalleryView(gallery)
+                    # else MossView(moss, key="moss-view")
+                    MossView(moss)
                 ],
             ),
         ),
