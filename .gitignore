@@ -154,4 +154,4 @@ cython_debug/
 
 # Flet
 storage/
-profiles/
+data/
