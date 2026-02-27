@@ -3,9 +3,9 @@ import asyncio
 import flet as ft
 
 from models.profile_model import ProfileManagerModel
-from services._db import init_db
-from services import _profile_repo as repo
-from services import _browser_engine as engine
+from services.db import init_db
+from services import profile_repo as repo
+from services import browser_engine as engine
 from mosses.profiles.index._profile_list import ProfileList
 from mosses.profiles.index._profile_form import ProfileForm
 name = "Profile Manager"

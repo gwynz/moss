@@ -5,8 +5,8 @@ from models.proxy_model import ProxyManagerModel
 from mosses.proxies.index._proxy_form import ProxyForm
 from mosses.proxies.index._proxy_list import ProxyList
 from mosses.proxies.index._proxy_test import test_proxy_connectivity
-from services._db import init_db
-from services import _proxy_repo as repo
+from services.db import init_db
+from services import proxy_repo as repo
 
 name = "Proxy Manager"
 

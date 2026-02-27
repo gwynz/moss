@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime, timezone
 
-from services._db import get_connection
-from services._fingerprint_defaults import generate_random_fingerprint
+from services.db import get_connection
+from services.fingerprint_defaults import generate_random_fingerprint
 
 # All profile columns (excluding id, created_at, updated_at)
 _MUTABLE_COLUMNS = [

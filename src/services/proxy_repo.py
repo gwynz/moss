@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from services._db import get_connection
+from services.db import get_connection
 
 _ALL_COLUMNS = [
     "id", "name", "notes", "proxy_type", "proxy_host", "proxy_port",
