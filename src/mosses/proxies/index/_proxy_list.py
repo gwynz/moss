@@ -16,7 +16,8 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
 
     def on_random_pick(e):
         if not model.proxies:
-            e.page.snack_bar = ft.SnackBar(ft.Text("No proxies available to pick from"))
+            e.page.snack_bar = ft.SnackBar(
+                ft.Text("No proxies available to pick from"))
             e.page.snack_bar.open = True
             e.page.update()
             return
@@ -24,7 +25,8 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
         proxy = random.choice(model.proxies)
         proxy_str = f"{proxy['proxy_host']}:{proxy['proxy_port']}:{proxy['proxy_username']}:{proxy['proxy_password']}"
         pyperclip.copy(proxy_str)
-        e.page.snack_bar = ft.SnackBar(ft.Text(f"Randomly picked and copied: {proxy['name']}"))
+        e.page.snack_bar = ft.SnackBar(
+            ft.Text(f"Randomly picked and copied: {proxy['name']}"))
         e.page.snack_bar.open = True
         e.page.update()
 
@@ -68,15 +70,15 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
                         ft.TextButton("Test", icon=ft.Icons.PLAY_ARROW,
                                       icon_color=ft.Colors.GREEN,
                                       on_click=lambda _: on_test(proxy)),
-                        ft.TextButton("Edit", icon=ft.Icons.EDIT,
+                        ft.IconButton(ft.Icons.EDIT, icon_size=16,
                                       on_click=lambda _: on_edit(proxy)),
-                        ft.IconButton(ft.Icons.COPY, icon_size=20,
-                                      icon_color=ft.Colors.BLUE,
+                        ft.IconButton(ft.Icons.COPY, icon_size=16,
+                                      icon_color=ft.Colors.GREEN,
                                       tooltip="Copy as host:port:user:pass",
                                       on_click=on_copy),
                         ft.IconButton(
-                            ft.Icons.DELETE_OUTLINE, icon_color=ft.Colors.RED, on_click=lambda _: on_delete(proxy)),
-                    ], alignment=ft.MainAxisAlignment.END)
+                            ft.Icons.DELETE_OUTLINE, icon_size=16, icon_color=ft.Colors.RED, on_click=lambda _: on_delete(proxy)),
+                    ], alignment=ft.MainAxisAlignment.END, spacing=2)
                 ], spacing=0),
                 padding=8
             )

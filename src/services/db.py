@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     proxy_password TEXT NOT NULL DEFAULT '',
 
     -- Browser Data
+    ext_metamask INTEGER NOT NULL DEFAULT 0,
+    ext_phantom INTEGER NOT NULL DEFAULT 0,
     extensions_path TEXT NOT NULL DEFAULT '',
     startup_url TEXT NOT NULL DEFAULT 'about:blank',
     cookies TEXT NOT NULL DEFAULT '',
@@ -96,6 +98,15 @@ async def init_db() -> None:
     conn = await get_connection()
     try:
         await conn.executescript(_SCHEMA)
+
+        # Migration for existing databases
+        cursor = await conn.execute("PRAGMA table_info(profiles)")
+        columns = [row["name"] for row in await cursor.fetchall()]
+        if "ext_metamask" not in columns:
+            await conn.execute("ALTER TABLE profiles ADD COLUMN ext_metamask INTEGER NOT NULL DEFAULT 0")
+        if "ext_phantom" not in columns:
+            await conn.execute("ALTER TABLE profiles ADD COLUMN ext_phantom INTEGER NOT NULL DEFAULT 0")
+
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")
         await conn.commit()

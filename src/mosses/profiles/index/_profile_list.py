@@ -47,14 +47,16 @@ def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete)
                 new_profiles = await profile_repo.list_profiles()
                 model.set_profiles(new_profiles)
 
-                def close_dlg(_):
+                def close_dlg():
                     e.page.pop_dialog()
 
                 dialog = ft.AlertDialog(
                     title=ft.Text("Import Success"),
-                    content=ft.Text(f"Successfully imported {count} profiles."),
+                    content=ft.Text(
+                        f"Successfully imported {count} profiles."),
                     actions=[
-                        ft.TextButton("Close", on_click=close_dlg),
+                        ft.TextButton(
+                            "Close", on_click=lambda _: close_dlg()),
                     ],
                     actions_alignment=ft.MainAxisAlignment.END,
                 )

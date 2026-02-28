@@ -28,6 +28,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["geo_longitude"] = None
         defaults["geo_accuracy"] = 100.0
         defaults["media_devices"] = ""
+        defaults["ext_metamask"] = False
+        defaults["ext_phantom"] = False
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
         defaults["cookies"] = ""
@@ -67,8 +69,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data["notes"] = current_notes
         # Preserve proxy/advanced settings
         for key in ("proxy_type", "proxy_host", "proxy_port", "proxy_username",
-                    "proxy_password", "fonts", "media_devices", "extensions_path",
-                    "startup_url", "cookies", "geoip"):
+                    "proxy_password", "fonts", "media_devices", "ext_metamask", "ext_phantom",
+                    "extensions_path", "startup_url", "cookies", "geoip"):
             new_data[key] = form_data.get(key, "")
         set_form_data(new_data)
 
@@ -231,7 +233,21 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     advanced_controls: list[ft.Control] = [
         text_field("Startup URL", "startup_url"),
         ft.Divider(),
-        ft.Text("Extensions", size=14, weight=ft.FontWeight.W_500),
+        ft.Text("Standard Extensions", size=14, weight=ft.FontWeight.W_500),
+        ft.Row([
+            ft.Checkbox(
+                label="MetaMask",
+                value=bool(form_data.get("ext_metamask", False)),
+                on_change=lambda e: update_field("ext_metamask", e.control.value),
+            ),
+            ft.Checkbox(
+                label="Phantom",
+                value=bool(form_data.get("ext_phantom", False)),
+                on_change=lambda e: update_field("ext_phantom", e.control.value),
+            ),
+        ], spacing=20),
+        ft.Divider(),
+        ft.Text("Custom Extensions", size=14, weight=ft.FontWeight.W_500),
         text_field("Extensions Path (unpacked)", "extensions_path"),
     ]
 

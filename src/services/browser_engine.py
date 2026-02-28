@@ -45,12 +45,36 @@ async def launch_profile(profile: dict) -> bool:
     # Note: Camoufox handles fingerprinting automatically.
     # We can pass 'os', 'fonts', etc. if we want to be specific.
 
+    addons = []
+    # Load standard extensions if enabled
+    ext_dir = Path(__file__).parent.parent / \
+        "assets" / "extensions" / "firefox"
+    if profile.get("ext_metamask"):
+        mm_path = ext_dir / "metamask"
+        if mm_path.exists():
+            addons.append(str(mm_path))
+    if profile.get("ext_phantom"):
+        ph_path = ext_dir / "phantom"
+        if ph_path.exists():
+            addons.append(str(ph_path))
+
+    # Load custom extensions from path
+    extensions_path = profile.get("extensions_path")
+    if extensions_path:
+        # Supports semicolon separated list of extracted addon directories
+        paths = [p.strip() for p in extensions_path.split(";") if p.strip()]
+        for p in paths:
+            if Path(p).exists():
+                addons.append(p)
+
     launch_kwargs = {
         "user_data_dir": user_data_dir,
         "persistent_context": True,
         "headless": False,
         "proxy": proxy_config,
         "geoip": True,
+        "addons": addons if addons else None,
+        "main_world_eval": True,
     }
 
     # Set screen size if available
