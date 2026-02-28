@@ -151,72 +151,50 @@ async def _launch_zendriver(profile: dict) -> bool:
     config.user_data_dir = user_data_dir
     config.headless = False
     if proxy_server:
-        if config.browser_args is None:
-            config.browser_args = []
         config.browser_args.append(f"--proxy-server={proxy_server}")
-        # Note: ZenDriver doesn't support proxy auth via Config directly.
-        # This implementation sets the server; auth would require a CDP interceptor or extension.
 
     # Screen Size
     width = profile.get("screen_width", 1280)
     height = profile.get("screen_height", 720)
-    if config.browser_args is None:
-        config.browser_args = []
     config.browser_args.append(f"--window-size={int(width)},{int(height)}")
 
     # Extensions
     chrome_ext_dir = Path(__file__).parent.parent / \
         "assets" / "extensions" / "chrome"
-    load_extensions = []
     if profile.get("ext_metamask"):
+        print("metamask")
         mm_path = chrome_ext_dir / "metamask"
+        print("path", str(mm_path))
         if mm_path.exists():
-            load_extensions.append(str(mm_path))
+            config.add_extension(str(mm_path))
+            print("file name", str(mm_path))
     if profile.get("ext_phantom"):
         ph_path = chrome_ext_dir / "phantom"
         if ph_path.exists():
-            load_extensions.append(str(ph_path))
-
-    # Load custom extensions from path
-    ext_path_str = profile.get("extensions_path")
-    if ext_path_str:
-        paths = [p.strip() for p in ext_path_str.split(";") if p.strip()]
-        for p in paths:
-            if Path(p).exists():
-                load_extensions.append(p)
-
-    if load_extensions:
-        if config.browser_args is None:
-            config.browser_args = []
-        # Mandatory flags for ZenDriver to allow extension loading/debugging
-        config.browser_args.append("--enable-unsafe-extension-debugging")
-        config.browser_args.append("--remote-debugging-pipe")
+            config.add_extension(str(ph_path))
 
     browser = await zd.start(config)
 
-    # ZenDriver dynamic extension loading
-    if load_extensions:
-        import zendriver.cdp.extensions as zd_ext
-        for ext_path in load_extensions:
-            try:
-                # ZenDriver/CDP requires absolute paths for extension loading
-                abs_path = str(Path(ext_path).absolute())
-                await browser.main_tab.send(zd_ext.load_unpacked(abs_path))
-            except Exception:
-                # Log or handle extension load failures
-                pass
+    # Setup proxy and extensions on the main tab
+    # Using 'draft:,' as in the working example to ensure a clean state for CDP setup
+    tab = await browser.get("draft:,")
 
-    # ZenDriver returns an object that acts like a browser/context
-    # We store it in running contexts for management
+    # Proxy Authentication Setup
+    proxy_user = profile.get("proxy_username", "")
+    proxy_pass = profile.get("proxy_password", "")
+    if proxy_server and proxy_user and proxy_pass:
+        await _setup_zendriver_proxy_auth(tab, proxy_user, proxy_pass)
+
+    # Store context for management
     _running_contexts[profile_id] = browser  # type: ignore
 
     await repo.set_running(profile_id, True)
     await repo.set_last_launched(profile_id)
 
-    # Handle startup URL
+    # Handle startup URL - use the same tab to ensure proxy auth persists
     startup_url = profile.get("startup_url", "about:blank")
     if startup_url and startup_url != "about:blank":
-        page = await browser.get(startup_url)
+        await tab.get(startup_url)
 
     # Watch for browser exit
     # Note: Logic here depends on ZenDriver's specific event system
@@ -300,3 +278,36 @@ def _atexit_cleanup():
 
 
 atexit.register(_atexit_cleanup)
+
+
+async def _setup_zendriver_proxy_auth(tab, username, password):
+    from zendriver.cdp import fetch
+    import asyncio
+
+    async def auth_challenge_handler(event: fetch.AuthRequired):
+        # Respond to the authentication challenge
+        await tab.send(
+            fetch.continue_with_auth(
+                request_id=event.request_id,
+                auth_challenge_response=fetch.AuthChallengeResponse(
+                    response="ProvideCredentials",
+                    username=username,
+                    password=password,
+                ),
+            )
+        )
+
+    async def req_paused(event: fetch.RequestPaused):
+        await tab.send(fetch.continue_request(request_id=event.request_id))
+
+    tab.add_handler(
+        fetch.RequestPaused, lambda event: asyncio.create_task(
+            req_paused(event))
+    )
+    tab.add_handler(
+        fetch.AuthRequired,
+        lambda event: asyncio.create_task(auth_challenge_handler(event)),
+    )
+
+    # Enable fetch domain with auth requests handling
+    await tab.send(fetch.enable(handle_auth_requests=True))
