@@ -150,6 +150,12 @@ async def _launch_zendriver(profile: dict) -> bool:
     config = zd.Config()
     config.user_data_dir = user_data_dir
     config.headless = False
+
+    # Critical flags for extension loading stability
+    config.browser_args.append("--no-sandbox")
+    config.browser_args.append("--disable-gpu")
+    config.browser_args.append("--disable-dev-shm-usage")
+
     if proxy_server:
         config.browser_args.append(f"--proxy-server={proxy_server}")
 
@@ -159,19 +165,26 @@ async def _launch_zendriver(profile: dict) -> bool:
     config.browser_args.append(f"--window-size={int(width)},{int(height)}")
 
     # Extensions
-    chrome_ext_dir = Path(__file__).parent.parent / \
-        "assets" / "extensions" / "chrome"
+    chrome_ext_dir = Path(__file__).parent.parent / "assets" / "extensions" / "chrome"
+    load_ext_paths = []
+
     if profile.get("ext_metamask"):
-        print("metamask")
         mm_path = chrome_ext_dir / "metamask"
-        print("path", str(mm_path))
         if mm_path.exists():
-            config.add_extension(str(mm_path))
-            print("file name", str(mm_path))
+            ext_path = str(mm_path.absolute())
+            config.add_extension(extension_path=ext_path)
+            load_ext_paths.append(ext_path)
+
     if profile.get("ext_phantom"):
         ph_path = chrome_ext_dir / "phantom"
         if ph_path.exists():
-            config.add_extension(str(ph_path))
+            ext_path = str(ph_path.absolute())
+            config.add_extension(extension_path=ext_path)
+            load_ext_paths.append(ext_path)
+
+    # Some versions of Chrome require this flag to successfully load multiple unpacked extensions
+    if load_ext_paths:
+        config.browser_args.append(f"--disable-extensions-except={','.join(load_ext_paths)}")
 
     browser = await zd.start(config)
 
