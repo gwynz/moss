@@ -21,6 +21,7 @@ dependencies = [
   "httpx>=1.0.dev3",
   "pyperclip>=1.11.0",
   "zendriver>=0.15.2",
+  "pydoll-python>=2.20.2",
 ]
 
 [tool.flet]

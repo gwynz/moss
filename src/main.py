@@ -15,7 +15,7 @@ moss = Moss()
 if __name__ == "__main__":
     def main(page: ft.Page):
         page.title = "Moss"
-        page.window_icon = "logo.png"
+        page.window.icon = "logo.png"
         diagnostics.enable_for_page(page)
         page.render_views(lambda: App(moss))
 

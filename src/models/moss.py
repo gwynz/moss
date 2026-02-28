@@ -38,6 +38,12 @@ class Moss:
     control_groups: list[ControlGroup] = field(
         default_factory=lambda: [
             ControlGroup(
+                name="Instructions",
+                label="Instructions",
+                icon=ft.Icons.INFO,
+                selected_icon=ft.Icons.INFO_SHARP,
+            ),
+            ControlGroup(
                 name="profiles",
                 label="Profiles",
                 icon=ft.Icons.BROWSER_UPDATED,

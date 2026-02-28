@@ -127,7 +127,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     # === Tab 1: Profile ===
     profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
-        dropdown_field("Browser Engine", "browser_type", ["camoufox", "zendriver"]),
+        dropdown_field("Browser Engine", "browser_type", [
+                       "camoufox", "zendriver", "pydoll", "cloakbrowser (only linux)"]),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 
@@ -240,12 +241,14 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             ft.Checkbox(
                 label="MetaMask",
                 value=bool(form_data.get("ext_metamask", False)),
-                on_change=lambda e: update_field("ext_metamask", e.control.value),
+                on_change=lambda e: update_field(
+                    "ext_metamask", e.control.value),
             ),
             ft.Checkbox(
                 label="Phantom",
                 value=bool(form_data.get("ext_phantom", False)),
-                on_change=lambda e: update_field("ext_phantom", e.control.value),
+                on_change=lambda e: update_field(
+                    "ext_phantom", e.control.value),
             ),
         ], spacing=20),
         ft.Divider(),

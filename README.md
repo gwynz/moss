@@ -14,12 +14,34 @@ Moss is a professional Flet-based interface designed to centralize the managemen
 
 ## 🚀 Key Features
 
-- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital footprints using the **Camoufox** anti-detect engine.
+- **Antidetect Browser Management**: Configure and launch browser profiles with unique digital footprints using multiple engines including **Camoufox**, **ZenDriver**, and **PyDoll**.
+- **Multi-Engine Support**: Choose the best core for your needs (Chrome vs. Firefox, Playwright-based vs. Native).
 - **Proxy Management**: Seamlessly manage, verify, and assign proxies to specific profiles.
-- **Web3 Wallet Management**: Integrated multi-wallet management for blockchain operations.
+- **Web3 Wallet Management**: Integrated multi-wallet management with pre-configured extensions support.
 - **Cross-Platform**: Built with Flet (Flutter), providing a consistent native experience across Windows, macOS, Linux, and Android.
 
-## 🛠️ Installation & Running
+## 🌐 Browser Engines Comparison
+
+Moss supports various browser engines to suit different automation and privacy needs.
+
+| Engine | Core | Based on Playwright? | Integrated Extensions | Integrated Proxy | Downloaded Browser? |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Camoufox** | Firefox | **Yes** | Yes (Automatic Added) | Yes (Automatic) | `Enabled` |
+| **ZenDriver** | Chrome | **No** | Manual | Manual | `Enabled` |
+| **PyDoll** | Chrome | **No** | Yes (Automatic Added) | Yes (Automatic Added) | `Disabled` |
+| **Playwright** | Chromium | **Yes** | Yes (Automatic Added) | Yes (Automatic) | `Enabled` |
+| **NoDriver** | Chrome | **No** | Manual (Omega) | Yes | `Disabled` |
+| **Cloak** | Chrome | **Plan** | Coming Soon | Coming Soon | `Disabled` |
+
+### Usage Notes:
+*   **Camoufox**: Best for high-fidelity fingerprinting. It automatically downloads its own patched Firefox binary (`Enabled`).
+*   **NoDriver**: Uses an undetected approach without a Webdriver. It supports integrated proxies and uses the system Chrome (`Disabled`). For complex extension management, it is recommended to use manual settings or extensions like **Proxy SwitchyOmega**.
+*   **ZenDriver**: Powerful Automation engine. It handles its own browser download (`Enabled`), but currently requires manual setup for extensions and proxies.
+*   **Playwright**: Standard automation engine. Downloads Chromium via Playwright command (`Enabled`).
+*   **PyDoll**: Lightweight Chrome-based engine. Uses system or manually provided browser binaries (`Disabled`).
+*   **Cloak**: Currently in development focusing on advanced Linux-based isolation (`Disabled`).
+
+## 🚀 Installation & Running
 
 <br>
 
