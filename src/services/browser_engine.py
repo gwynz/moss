@@ -19,12 +19,16 @@ async def launch_profile(profile: dict) -> bool:
     if profile_id in _running_contexts:
         return False
 
+    browser_type = profile.get("browser_type", "camoufox")
+    if browser_type == "zendriver":
+        return await _launch_zendriver(profile)
+
     from camoufox.async_api import AsyncCamoufox
     from browserforge.fingerprints import Screen
 
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
-        user_data_dir = str(_DB_DIR / "browser_data" / profile_id)
+        user_data_dir = str(_DB_DIR / "browser_data" / "camoufox" / profile_id)
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     # Map profile to Camoufox options
@@ -139,6 +143,62 @@ async def launch_profile(profile: dict) -> bool:
     from typing import Any
     context.on("close", lambda _ctx: asyncio.ensure_future(
         _on_context_closed(profile_id)))  # type: ignore
+
+    return True
+
+
+async def _launch_zendriver(profile: dict) -> bool:
+    import zendriver as zd
+    profile_id = profile["id"]
+    user_data_dir = profile.get("user_data_dir", "")
+    if not user_data_dir:
+        user_data_dir = str(_DB_DIR / "browser_data" / "zendriver" / profile_id)
+        Path(user_data_dir).mkdir(parents=True, exist_ok=True)
+
+    # Proxy Configuration
+    proxy_server = ""
+    proxy_type = profile.get("proxy_type", "")
+    proxy_host = profile.get("proxy_host", "")
+    proxy_port = profile.get("proxy_port", 0)
+    if proxy_type and proxy_host and proxy_port:
+        proxy_server = f"{proxy_type}://{proxy_host}:{proxy_port}"
+        # ZenDriver/Chrome handles auth via '--proxy-auth' or extension
+        # For simplicity in this implementation, we use the standard proxy flag
+        # Advanced auth might require a custom extension or helper
+
+    config = zd.Config()
+    config.user_data_dir = user_data_dir
+    config.headless = False
+    if proxy_server:
+        config.proxy = {"server": proxy_server}
+        user = profile.get("proxy_username", "")
+        password = profile.get("proxy_password", "")
+        if user and password:
+            config.proxy["username"] = user
+            config.proxy["password"] = password
+
+    # Screen Size
+    width = profile.get("screen_width", 1280)
+    height = profile.get("screen_height", 720)
+    config.window_size = (int(width), int(height))
+
+    browser = await zd.start(config)
+
+    # ZenDriver returns an object that acts like a browser/context
+    # We store it in running contexts for management
+    _running_contexts[profile_id] = browser # type: ignore
+
+    await repo.set_running(profile_id, True)
+    await repo.set_last_launched(profile_id)
+
+    # Handle startup URL
+    startup_url = profile.get("startup_url", "about:blank")
+    if startup_url and startup_url != "about:blank":
+        page = await browser.get(startup_url)
+
+    # Watch for browser exit
+    # Note: Logic here depends on ZenDriver's specific event system
+    # For now, we assume standard process monitoring if available or manual close
 
     return True
 

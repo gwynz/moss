@@ -30,6 +30,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["media_devices"] = ""
         defaults["ext_metamask"] = False
         defaults["ext_phantom"] = False
+        defaults["browser_type"] = "camoufox"
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
         defaults["cookies"] = ""
@@ -126,6 +127,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     # === Tab 1: Profile ===
     profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
+        dropdown_field("Browser Engine", "browser_type", ["camoufox", "zendriver"]),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 

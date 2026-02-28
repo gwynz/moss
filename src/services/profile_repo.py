@@ -17,6 +17,7 @@ _MUTABLE_COLUMNS = [
     "geo_latitude", "geo_longitude", "geo_accuracy",
     "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
     "ext_metamask", "ext_phantom",
+    "browser_type",
     "extensions_path", "startup_url", "cookies",
     "user_data_dir", "is_running",
 ]
@@ -32,6 +33,7 @@ _ALL_COLUMNS = ["id", "name", "notes", "created_at", "updated_at", "last_launche
                 "geo_latitude", "geo_longitude", "geo_accuracy",
                 "proxy_type", "proxy_host", "proxy_port", "proxy_username", "proxy_password",
                 "ext_metamask", "ext_phantom",
+                "browser_type",
                 "extensions_path", "startup_url", "cookies",
                 "user_data_dir", "is_running",
                 ]

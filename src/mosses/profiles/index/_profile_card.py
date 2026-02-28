@@ -13,6 +13,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     is_running = model.is_running(profile["id"])
     is_starting = model.is_starting(profile["id"])
     ua = profile.get("user_agent", "")
+    browser_type = profile.get("browser_type", "camoufox")
 
     # Status indicator
     status_indicator = ft.ProgressRing(
@@ -31,7 +32,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         proxy_text = f"{proxy_type.upper()}://{proxy_host}:{proxy_port}"
         proxy_badge = ft.Container(
             content=ft.Text(proxy_text, size=10, color=ft.Colors.WHITE),
-            bgcolor=ft.Colors.BLUE_700,
+            bgcolor=ft.Colors.GREEN,
             border_radius=4,
             padding=ft.Padding(left=6, top=2, right=6, bottom=2),
         )
@@ -77,15 +78,25 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         disabled=is_running or is_starting,
     )
 
-    info_widgets: list[ft.Control] = [
-        ft.Text(name, size=14, weight=ft.FontWeight.W_500),
-    ]
+    # Browser badge
+    browser_badge = ft.Container(
+        content=ft.Text(browser_type.upper(), size=9,
+                        color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+        bgcolor=ft.Colors.ORANGE_800 if browser_type == "camoufox" else ft.Colors.TEAL_700,
+        border_radius=4,
+        padding=ft.Padding(left=5, top=1, right=5, bottom=1),
+    )
+
+    info_widgets: list[ft.Control] = []
+    info_widgets.append(ft.Text(name, size=14, weight=ft.FontWeight.W_500))
+    info_widgets.append(browser_badge)
     if proxy_badge:
         info_widgets.append(proxy_badge)
 
     details: list[ft.Control] = []
     if ua_preview:
         details.append(ua_preview)
+
     if notes_preview:
         details.append(notes_preview)
 

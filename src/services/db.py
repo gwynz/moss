@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     cookies TEXT NOT NULL DEFAULT '',
 
     -- Runtime
+    browser_type TEXT NOT NULL DEFAULT 'camoufox',
     user_data_dir TEXT NOT NULL DEFAULT '',
     is_running INTEGER NOT NULL DEFAULT 0
 );
@@ -106,6 +107,8 @@ async def init_db() -> None:
             await conn.execute("ALTER TABLE profiles ADD COLUMN ext_metamask INTEGER NOT NULL DEFAULT 0")
         if "ext_phantom" not in columns:
             await conn.execute("ALTER TABLE profiles ADD COLUMN ext_phantom INTEGER NOT NULL DEFAULT 0")
+        if "browser_type" not in columns:
+            await conn.execute("ALTER TABLE profiles ADD COLUMN browser_type TEXT NOT NULL DEFAULT 'camoufox'")
 
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")

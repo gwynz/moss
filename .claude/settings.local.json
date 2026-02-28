@@ -9,7 +9,9 @@
       "Bash(git:*)",
       "WebSearch",
       "Bash(pip show:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv run:*)"
     ]
   }
 }
