@@ -79,10 +79,17 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     )
 
     # Browser badge
+    browser_colors = {
+        "camoufox": ft.Colors.ORANGE_800,
+        "zendriver": ft.Colors.BLUE_GREY_700,
+        "pydoll": ft.Colors.YELLOW_800,
+        "cloakbrowser": ft.Colors.BLUE_GREY_700,
+    }
+
     browser_badge = ft.Container(
         content=ft.Text(browser_type.upper(), size=9,
                         color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-        bgcolor=ft.Colors.ORANGE_800 if browser_type == "camoufox" else ft.Colors.TEAL_700,
+        bgcolor=browser_colors.get(browser_type.lower(), ft.Colors.GREY_600),
         border_radius=4,
         padding=ft.Padding(left=5, top=1, right=5, bottom=1),
     )

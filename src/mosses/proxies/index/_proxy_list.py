@@ -30,15 +30,21 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
         e.page.snack_bar.open = True
         e.page.update()
 
-    def proxy_card(proxy):
+    def proxy_row(proxy):
         test_status = model.test_results.get(proxy["id"], "")
 
-        status_display = ft.Container()
-        if test_status:
-            is_ok = test_status.startswith("OK")
-            color = ft.Colors.GREEN if is_ok else ft.Colors.RED
-            status_display = ft.Text(
-                test_status, color=color, size=12, italic=True)
+        # Status circle
+        is_ok = test_status.startswith("OK") if test_status else None
+        status_color = ft.Colors.GREEN if is_ok else (
+            ft.Colors.RED if is_ok is False else ft.Colors.GREY_600)
+
+        status_indicator = ft.Container(
+            width=10,
+            height=10,
+            border_radius=5,
+            bgcolor=status_color,
+            tooltip=test_status if test_status else "Not tested",
+        )
 
         def on_copy(e):
             proxy_str = f"{proxy['proxy_host']}:{proxy['proxy_port']}:{proxy['proxy_username']}:{proxy['proxy_password']}"
@@ -47,41 +53,49 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
             e.page.snack_bar.open = True
             e.page.update()
 
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column([
-                    ft.ListTile(
-                        leading=ft.Icon(ft.Icons.LANGUAGE),
-                        title=ft.Text(
-                            proxy["name"], weight=ft.FontWeight.BOLD),
-                        subtitle=ft.Text(
-                            f"{proxy['proxy_type']}://{proxy['proxy_host']}:{proxy['proxy_port']}"),
-                    ),
-                    ft.Container(
-                        padding=ft.Padding(
-                            left=16, right=16, top=0, bottom=8),
-                        content=ft.Column([
-                            ft.Text(
-                                proxy["notes"], size=12, color=ft.Colors.ON_SURFACE_VARIANT) if proxy["notes"] else ft.Container(),
-                            status_display,
-                        ], spacing=4)
-                    ),
+        # Type badge
+        type_badge = ft.Container(
+            content=ft.Text(proxy["proxy_type"].upper(), size=9,
+                            color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+            bgcolor=ft.Colors.BLUE_GREY_700,
+            border_radius=4,
+            padding=ft.Padding(left=5, top=1, right=5, bottom=1),
+        )
+
+        return ft.Container(
+            content=ft.Row([
+                status_indicator,
+                ft.Column([
                     ft.Row([
-                        ft.TextButton("Test", icon=ft.Icons.PLAY_ARROW,
-                                      icon_color=ft.Colors.GREEN,
-                                      on_click=lambda _: on_test(proxy)),
-                        ft.IconButton(ft.Icons.EDIT, icon_size=16,
-                                      on_click=lambda _: on_edit(proxy)),
-                        ft.IconButton(ft.Icons.COPY, icon_size=16,
-                                      icon_color=ft.Colors.GREEN,
-                                      tooltip="Copy as host:port:user:pass",
-                                      on_click=on_copy),
-                        ft.IconButton(
-                            ft.Icons.DELETE_OUTLINE, icon_size=16, icon_color=ft.Colors.RED, on_click=lambda _: on_delete(proxy)),
-                    ], alignment=ft.MainAxisAlignment.END, spacing=2)
-                ], spacing=0),
-                padding=8
-            )
+                        ft.Text(proxy["name"], size=14,
+                                weight=ft.FontWeight.W_500),
+                        type_badge,
+                    ], spacing=8),
+                    ft.Text(
+                        f"{proxy['proxy_host']}:{proxy['proxy_port']}", size=11, color=ft.Colors.GREY_500),
+                    ft.Text(proxy["notes"], size=11, color=ft.Colors.GREY_500,
+                            italic=True, max_lines=1) if proxy["notes"] else ft.Container(),
+                ], expand=True, spacing=2),
+                ft.Row([
+                    ft.IconButton(ft.Icons.PLAY_ARROW_OUTLINED, tooltip="Test",
+                                  icon_color=ft.Colors.GREEN, on_click=lambda _: on_test(proxy), icon_size=20),
+                    ft.IconButton(ft.Icons.EDIT_OUTLINED, tooltip="Edit",
+                                  on_click=lambda _: on_edit(proxy), icon_size=20),
+                    ft.IconButton(ft.Icons.COPY_ALL_OUTLINED,
+                                  tooltip="Copy", on_click=on_copy, icon_size=20),
+                    ft.IconButton(ft.Icons.DELETE_OUTLINE, tooltip="Delete",
+                                  icon_color=ft.Colors.RED_400, on_click=lambda _: on_delete(proxy), icon_size=20),
+                ], spacing=0)
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER, spacing=12),
+            padding=ft.Padding(left=16, top=8, right=16, bottom=8),
+            border=ft.Border(
+                ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+                ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+                ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+                ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT),
+            ),
+            border_radius=8,
+            margin=ft.Margin(left=0, top=0, right=0, bottom=4),
         )
 
     toolbar = ft.Row(
@@ -138,14 +152,10 @@ def ProxyList(model, on_edit, on_delete, on_test, on_import_click):
 
     return ft.Column([
         toolbar,
-        ft.GridView(
-            controls=[proxy_card(p) for p in model.paged_proxies],
+        ft.ListView(
+            controls=[proxy_row(p) for p in model.paged_proxies],
             expand=True,
-            runs_count=3,
-            max_extent=400,
-            child_aspect_ratio=1.8,
-            spacing=10,
-            run_spacing=10,
+            spacing=4,
         ) if model.paged_proxies else ft.Container(
             content=ft.Text("No proxies found", size=16),
             alignment=ft.Alignment.CENTER,

@@ -25,6 +25,18 @@ async def list_proxies() -> list[dict]:
         await conn.close()
 
 
+async def pick_random_proxy() -> dict | None:
+    conn = await get_connection()
+    try:
+        cursor = await conn.execute(
+            f"SELECT {', '.join(_ALL_COLUMNS)} FROM proxies ORDER BY RANDOM() LIMIT 1"
+        )
+        row = await cursor.fetchone()
+        return _row_to_dict(row) if row else None
+    finally:
+        await conn.close()
+
+
 async def get_proxy(proxy_id: str) -> dict | None:
     conn = await get_connection()
     try:

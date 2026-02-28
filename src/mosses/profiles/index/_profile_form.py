@@ -2,6 +2,7 @@ import flet as ft
 
 
 from mosses.profiles.index._profile_proxy import ProxyTest
+from services.proxy_repo import pick_random_proxy
 from services.fingerprint_defaults import (
     USER_AGENTS, PLATFORMS, LANGUAGES,
     TIMEZONES, WEBGL_CONFIGS, HARDWARE_CONCURRENCIES, DEVICE_MEMORIES,
@@ -60,6 +61,18 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         if len(parts) >= 4:
             new_data["proxy_username"] = parts[2]
             new_data["proxy_password"] = parts[3]
+        set_form_data(new_data)
+
+    async def on_random_proxy(_):
+        proxy = await pick_random_proxy()
+        if not proxy:
+            return
+        new_data = dict(form_data)
+        new_data["proxy_type"] = proxy.get("proxy_type", "http")
+        new_data["proxy_host"] = proxy.get("proxy_host", "")
+        new_data["proxy_port"] = proxy.get("proxy_port", 0)
+        new_data["proxy_username"] = proxy.get("proxy_username", "")
+        new_data["proxy_password"] = proxy.get("proxy_password", "")
         set_form_data(new_data)
 
     def randomize(_):
@@ -128,7 +141,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
         dropdown_field("Browser Engine", "browser_type", [
-                       "camoufox", "zendriver", "pydoll", "cloakbrowser (only linux)"]),
+                       "camoufox", "zendriver", "pydoll"]),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 
@@ -208,14 +221,22 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
 
     # === Tab 5: Network ===
     network_controls: list[ft.Control] = [
-        ft.TextField(
-            label="Quick Add (host:port:user:pass)",
-            on_change=on_quick_add,
-            value=f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}" if form_data.get(
-                "proxy_host", "") and form_data.get("proxy_port", 0) and form_data.get("proxy_username", "") and form_data.get("proxy_password", "") else "",
-            text_size=13,
-            hint_text="example.com:8080:username:password"
-        ),
+        ft.Row([
+            ft.TextField(
+                label="Quick Add (host:port:user:pass)",
+                on_change=on_quick_add,
+                value=f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}" if form_data.get(
+                    "proxy_host", "") and form_data.get("proxy_port", 0) and form_data.get("proxy_username", "") and form_data.get("proxy_password", "") else "",
+                text_size=13,
+                hint_text="example.com:8080:username:password",
+                expand=True,
+            ),
+            ft.TextButton(
+                "Random Pick",
+                icon=ft.Icons.SHUFFLE,
+                on_click=on_random_proxy,
+            ),
+        ]),
         ft.Divider(),
         dropdown_field("Proxy Type", "proxy_type", ["http", "socks5"]),
         text_field("Proxy Host", "proxy_host"),
