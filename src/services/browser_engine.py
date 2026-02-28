@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 # profile_id -> BrowserContext
 _running_contexts: dict[str, "BrowserContext"] = {}
-_camoufox_instance = None
 _DB_DIR = Path.home() / ".moss"
 
 
@@ -23,9 +22,16 @@ async def launch_profile(profile: dict) -> bool:
     if browser_type == "zendriver":
         return await _launch_zendriver(profile)
 
+    return await _launch_camoufox(profile)
+
+
+async def _launch_camoufox(profile: dict) -> bool:
     from camoufox.async_api import AsyncCamoufox
     from browserforge.fingerprints import Screen
+    from playwright.async_api import Browser, BrowserContext
+    from typing import Any
 
+    profile_id = profile["id"]
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
         user_data_dir = str(_DB_DIR / "browser_data" / "camoufox" / profile_id)
@@ -46,9 +52,6 @@ async def launch_profile(profile: dict) -> bool:
             proxy_config["password"] = proxy_pass
 
     # Camoufox specific and Playwright standard options
-    # Note: Camoufox handles fingerprinting automatically.
-    # We can pass 'os', 'fonts', etc. if we want to be specific.
-
     addons = []
     # Load standard extensions if enabled
     ext_dir = Path(__file__).parent.parent / \
@@ -94,10 +97,6 @@ async def launch_profile(profile: dict) -> bool:
     result = await browser_manager.__aenter__()
 
     # Ensure it's a context (Camoufox returns context if persistent_context=True)
-    # When persistent_context=True, AsyncCamoufox returns a BrowserContext.
-    # Otherwise it returns a Browser.
-    from playwright.async_api import Browser, BrowserContext
-
     if isinstance(result, Browser):
         context = await result.new_context()
     elif isinstance(result, BrowserContext):
@@ -108,17 +107,6 @@ async def launch_profile(profile: dict) -> bool:
 
     # Store context
     _running_contexts[profile_id] = context
-
-    # # Import cookies if present
-    # cookies_json = profile.get("cookies", "")
-    # if cookies_json:
-    #     import json
-    #     try:
-    #         cookies = json.loads(cookies_json)
-    #         if cookies:
-    #             await context.add_cookies(cookies)
-    #     except (json.JSONDecodeError, TypeError):
-    #         pass
 
     await repo.set_running(profile_id, True)
     await repo.set_last_launched(profile_id)
@@ -133,14 +121,6 @@ async def launch_profile(profile: dict) -> bool:
             await page.goto(startup_url)
 
     # Watch for browser close
-    # Using 'close' for BrowserContext is correct in Playwright.
-    # If the error persists, it might be due to incorrect type narrowing
-    # or Pylance being overly strict with the literal.
-    # The error "Argument of type 'Literal['close']' cannot be assigned to parameter 'event' of type 'Literal['disconnected']' in function 'on'"
-    # suggests it might be expecting 'disconnected' if it thinks it's a Browser,
-    # but for BrowserContext 'close' is correct.
-    # We cast to any to bypass the literal check if Pylance is confused.
-    from typing import Any
     context.on("close", lambda _ctx: asyncio.ensure_future(
         _on_context_closed(profile_id)))  # type: ignore
 
@@ -152,7 +132,8 @@ async def _launch_zendriver(profile: dict) -> bool:
     profile_id = profile["id"]
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
-        user_data_dir = str(_DB_DIR / "browser_data" / "zendriver" / profile_id)
+        user_data_dir = str(_DB_DIR / "browser_data" /
+                            "zendriver" / profile_id)
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     # Proxy Configuration
@@ -170,23 +151,64 @@ async def _launch_zendriver(profile: dict) -> bool:
     config.user_data_dir = user_data_dir
     config.headless = False
     if proxy_server:
-        config.proxy = {"server": proxy_server}
-        user = profile.get("proxy_username", "")
-        password = profile.get("proxy_password", "")
-        if user and password:
-            config.proxy["username"] = user
-            config.proxy["password"] = password
+        if config.browser_args is None:
+            config.browser_args = []
+        config.browser_args.append(f"--proxy-server={proxy_server}")
+        # Note: ZenDriver doesn't support proxy auth via Config directly.
+        # This implementation sets the server; auth would require a CDP interceptor or extension.
 
     # Screen Size
     width = profile.get("screen_width", 1280)
     height = profile.get("screen_height", 720)
-    config.window_size = (int(width), int(height))
+    if config.browser_args is None:
+        config.browser_args = []
+    config.browser_args.append(f"--window-size={int(width)},{int(height)}")
+
+    # Extensions
+    chrome_ext_dir = Path(__file__).parent.parent / \
+        "assets" / "extensions" / "chrome"
+    load_extensions = []
+    if profile.get("ext_metamask"):
+        mm_path = chrome_ext_dir / "metamask"
+        if mm_path.exists():
+            load_extensions.append(str(mm_path))
+    if profile.get("ext_phantom"):
+        ph_path = chrome_ext_dir / "phantom"
+        if ph_path.exists():
+            load_extensions.append(str(ph_path))
+
+    # Load custom extensions from path
+    ext_path_str = profile.get("extensions_path")
+    if ext_path_str:
+        paths = [p.strip() for p in ext_path_str.split(";") if p.strip()]
+        for p in paths:
+            if Path(p).exists():
+                load_extensions.append(p)
+
+    if load_extensions:
+        if config.browser_args is None:
+            config.browser_args = []
+        # Mandatory flags for ZenDriver to allow extension loading/debugging
+        config.browser_args.append("--enable-unsafe-extension-debugging")
+        config.browser_args.append("--remote-debugging-pipe")
 
     browser = await zd.start(config)
 
+    # ZenDriver dynamic extension loading
+    if load_extensions:
+        import zendriver.cdp.extensions as zd_ext
+        for ext_path in load_extensions:
+            try:
+                # ZenDriver/CDP requires absolute paths for extension loading
+                abs_path = str(Path(ext_path).absolute())
+                await browser.main_tab.send(zd_ext.load_unpacked(abs_path))
+            except Exception:
+                # Log or handle extension load failures
+                pass
+
     # ZenDriver returns an object that acts like a browser/context
     # We store it in running contexts for management
-    _running_contexts[profile_id] = browser # type: ignore
+    _running_contexts[profile_id] = browser  # type: ignore
 
     await repo.set_running(profile_id, True)
     await repo.set_last_launched(profile_id)
