@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Moss Example Extension (Firefox)",
+  "version": "1.0.0",
+  "description": "A minimal example extension for the Moss antidetect browser (Firefox).",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "example@moss.ai"
+    }
+  },
+  "action": {
+    "default_title": "Moss Example (Firefox)"
+  }
+}
