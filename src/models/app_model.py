@@ -10,6 +10,12 @@ class AppModel:
     route: str
     theme_mode: ft.ThemeMode = ft.ThemeMode.DARK
     theme_color: ft.Colors = ft.Colors.GREEN
+    is_unlocked: bool = False
+    needs_setup: bool = False
+
+    def __post_init__(self):
+        from utils.crypto import is_password_set
+        self.needs_setup = not is_password_set()
 
     def route_change(self, e: ft.RouteChangeEvent):
         print("Route changed from:", self.route, "to:", e.route)

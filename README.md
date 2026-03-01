@@ -18,7 +18,19 @@ Moss is a professional Flet-based interface designed to centralize the managemen
 - **Multi-Engine Support**: Choose the best core for your needs (Chrome vs. Firefox, Playwright-based vs. Native).
 - **Proxy Management**: Seamlessly manage, verify, and assign proxies to specific profiles.
 - **Web3 Wallet Management**: Integrated multi-wallet management with pre-configured extensions support.
+- **Master Password Security**: Industry-standard **PBKDF2-HMAC-SHA256** encryption for sensitive data (seed phrases). **Zero-knowledge architecture**: passwords are never stored, only derived.
 - **Cross-Platform**: Built with Flet (Flutter), providing a consistent native experience across Windows, macOS, Linux, and Android.
+
+## 🔐 Security & Privacy
+
+### Master Password
+Moss uses a **Master Password** system to protect your sensitive data (specifically Web3 Wallet seed phrases).
+
+*   **Zero-Knowledge**: Your password is never stored on disk or sent anywhere. It is used to derive a 256-bit AES key in memory during your session.
+*   **Irrecoverable**: Because your password is never stored, **it cannot be reset or changed** through the application. If you lose your Master Password, your encrypted data (seed phrases) will be permanently inaccessible.
+*   **PBKDF2 Protection**: We use 600,000 iterations of PBKDF2 with a unique salt to protect against brute-force attacks.
+
+**⚠️ Warning:** Moss is a self-custodial tool. Backup your seed phrases in a physical, secure location outside of this application.
 
 ## 🌐 Browser Engines Comparison
 

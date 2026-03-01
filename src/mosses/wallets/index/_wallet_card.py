@@ -45,7 +45,7 @@ def WalletCard(wallet: dict, is_revealed: bool, on_edit, on_delete, on_toggle_re
     return ft.Container(
         content=ft.Column([
             ft.Row([
-                ft.Icon(ft.Icons.WALLET, size=20, color=ft.Colors.GREEN_400),
+                ft.Icon(ft.Icons.WALLET, size=20, color=ft.Colors.GREEN),
                 ft.Column([
                     ft.Row([
                         ft.Text(wallet["name"], size=14,
