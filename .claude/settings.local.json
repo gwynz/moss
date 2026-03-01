@@ -12,7 +12,8 @@
       "Bash(python:*)",
       "Bash(uv pip:*)",
       "Bash(uv run:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(ls:*)"
     ]
   }
 }

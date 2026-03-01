@@ -82,7 +82,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     browser_colors = {
         "camoufox": ft.Colors.ORANGE_800,
         "zendriver": ft.Colors.BLUE_GREY_700,
-        "pydoll": ft.Colors.YELLOW_800,
+        "pydoll": ft.Colors.YELLOW_900,
         "cloakbrowser": ft.Colors.BLUE_GREY_700,
     }
 

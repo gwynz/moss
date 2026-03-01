@@ -31,7 +31,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["media_devices"] = ""
         defaults["ext_metamask"] = False
         defaults["ext_phantom"] = False
-        defaults["browser_type"] = "camoufox"
+        defaults["browser_type"] = "pydoll"
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
         defaults["cookies"] = ""

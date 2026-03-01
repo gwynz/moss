@@ -50,7 +50,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("Yes")),
                             ft.DataCell(ft.Text("Auto Add")),
                             ft.DataCell(ft.Text("Auto")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
@@ -60,7 +60,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("No")),
                             ft.DataCell(ft.Text("Manual")),
                             ft.DataCell(ft.Text("Manual")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
@@ -70,7 +70,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("No")),
                             ft.DataCell(ft.Text("Auto Add")),
                             ft.DataCell(ft.Text("Auto Add")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
@@ -80,7 +80,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("Yes")),
                             ft.DataCell(ft.Text("Auto Add")),
                             ft.DataCell(ft.Text("Auto")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
@@ -90,7 +90,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("No")),
                             ft.DataCell(ft.Text("Manual (Omega)")),
                             ft.DataCell(ft.Text("Yes")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
@@ -100,7 +100,7 @@ def InstructionView():
                             ft.DataCell(ft.Text("Plan")),
                             ft.DataCell(ft.Text("Coming Soon")),
                             ft.DataCell(ft.Text("Coming Soon")),
-                            ft.DataCell(ft.ElevatedButton(
+                            ft.DataCell(ft.Button(
                                 "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                     ]

@@ -1,7 +1,11 @@
 import asyncio
 import atexit
+import zipfile
+import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
+from pydoll.constants import PageLoadState
 
 from services import profile_repo as repo
 
@@ -100,7 +104,23 @@ async def _launch_cloakbrowser(profile: dict) -> bool:
     raise NotImplementedError("CloakBrowser not yet supported")
 
 
-async def _launch_pydoll(profile: dict) -> bool:
+def _ensure_extension_extracted(name: str, target_dir: Path) -> bool:
+    """If name.zip exists in root, delete target_dir and extract fresh."""
+    zip_path = Path(f"{name}.zip")
+    if zip_path.exists():
+        try:
+            if target_dir.exists():
+                shutil.rmtree(target_dir, ignore_errors=True)
+            target_dir.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(zip_path, 'r') as z:
+                z.extractall(target_dir)
+            return True
+        except Exception as e:
+            print(f"Error extracting {name}.zip: {e}")
+    return target_dir.exists()
+
+
+async def _launch_pydoll(profile: dict, fast: Optional[bool] = False) -> bool:
     from pydoll.browser.chromium import Chrome
     from pydoll.browser.options import ChromiumOptions
 
@@ -111,13 +131,99 @@ async def _launch_pydoll(profile: dict) -> bool:
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     options = ChromiumOptions()
-    options.add_argument(f"--user-data-dir={user_data_dir}")
-    options.headless = False
+    options.browser_preferences = {
+        # Enable Do Not Track
+        'enable_do_not_track': True,
+
+        # Disable referrers
+        'enable_referrers': False,
+
+        # Disable Safe Browsing (sends URLs to Google)
+        'safebrowsing': {
+            'enabled': False
+        },
+
+        # Disable password manager
+        'profile': {
+            'password_manager_enabled': False
+        },
+
+        # Disable autofill
+        'autofill': {
+            'enabled': False,
+            'profile_enabled': False
+        },
+
+        # Disable search suggestions (sends queries to search engine)
+        'search': {
+            'suggest_enabled': False
+        },
+
+        # Disable telemetry and metrics
+        'user_experience_metrics': {
+            'reporting_enabled': False
+        },
+
+        # Block third-party cookies
+        'profile': {
+            'block_third_party_cookies': True,
+            'cookie_controls_mode': 1
+        }
+    }
+    options.binary_location = r""
+
+    # Use absolute path for user-data-dir and ensure it's quoted if contains spaces
+    abs_user_data_dir = str(Path(user_data_dir).absolute())
+    options.add_argument(f"--user-data-dir={abs_user_data_dir}")
+
+    if fast:
+        # Faster page loads (DOM ready is enough for scraping)
+        options.page_load_state = PageLoadState.INTERACTIVE
+
+        # Disable unnecessary features
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-background-networking')
+        options.add_argument('--disable-sync')
+        options.add_argument('--disable-translate')
+
+        # Block content that slows down loading
+        options.block_notifications = True
+        options.block_popups = True
+
+        # Disable images for even faster loading (if you don't need them)
+        options.add_argument('--blink-settings=imagesEnabled=false')
+
+        # Network optimizations
+        options.add_argument('--disable-features=NetworkPrediction')
+        options.add_argument('--dns-prefetch-disable')
+    else:
+        # Core stealth
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument(
+            '--disable-features=IsolateOrigins,site-per-process')
+
+        # Language and locale
+        options.add_argument('--lang=en-US')
+        options.add_argument('--accept-lang=en-US,en;q=0.9')
+
+        # WebGL (software renderer to avoid unique GPU signatures)
+        options.add_argument('--use-gl=swiftshader')
+        options.add_argument('--disable-features=WebGLDraftExtensions')
+
+        # WebRTC IP leak prevention
+        options.webrtc_leak_protection = True
+
+        # Permissions and first-run
+        options.add_argument('--no-first-run')
+        options.add_argument('--no-default-browser-check')
 
     # Screen Size
     width = profile.get("screen_width", 1280)
     height = profile.get("screen_height", 720)
     options.add_argument(f"--window-size={int(width)},{int(height)}")
+    options.add_argument('--window-position=0,0')
 
     # Proxy configuration
     proxy_type = profile.get("proxy_type", "")
@@ -130,32 +236,35 @@ async def _launch_pydoll(profile: dict) -> bool:
             proxy_url = f"{proxy_type}://{user}:{password}@{proxy_host}:{proxy_port}"
         else:
             proxy_url = f"{proxy_type}://{proxy_host}:{proxy_port}"
-        # Pydoll/Chrome proxy argument
         options.add_argument(f"--proxy-server={proxy_url}")
 
     # Extension loading
     load_ext_paths = []
     chrome_ext_dir = Path(__file__).parent.parent / \
         "assets" / "extensions" / "chrome"
+    chrome_ext_dir.mkdir(parents=True, exist_ok=True)
 
     if profile.get("ext_metamask"):
         mm_path = chrome_ext_dir / "metamask"
-        if mm_path.exists():
+        if _ensure_extension_extracted("metamask", mm_path):
             load_ext_paths.append(str(mm_path.absolute()))
 
     if profile.get("ext_phantom"):
         ph_path = chrome_ext_dir / "phantom"
-        if ph_path.exists():
+        if _ensure_extension_extracted("phantom", ph_path):
             load_ext_paths.append(str(ph_path.absolute()))
 
     custom_ext = profile.get("extensions_path")
     if custom_ext:
         for p in custom_ext.split(";"):
-            if p.strip() and Path(p.strip()).exists():
-                load_ext_paths.append(str(Path(p.strip()).absolute()))
+            path = Path(p.strip())
+            if p.strip() and path.exists():
+                load_ext_paths.append(str(path.absolute()))
 
     if load_ext_paths:
-        options.add_argument(f"--load-extension={','.join(load_ext_paths)}")
+        ext_arg = ",".join(load_ext_paths)
+        options.add_argument(f"--load-extension={ext_arg}")
+        # options.add_argument(f"--disable-extensions-except={ext_arg}")
 
     browser = Chrome(options=options)
     await browser.start()
@@ -353,15 +462,23 @@ async def close_profile(profile_id: str) -> bool:
     # Export cookies before closing
     try:
         import json
-        cookies = await context.cookies()
-        if cookies:
-            await repo.update_profile(profile_id, cookies=json.dumps(cookies))
-    except Exception:
+        if hasattr(context, "cookies") and callable(getattr(context, "cookies")):
+            cookies = await context.cookies()
+            if cookies:
+                await repo.update_profile(profile_id, cookies=json.dumps(cookies))
+    except Exception as e:
+        print(f"Error exporting cookies for {profile_id}: {e}")
         pass
 
     try:
-        await context.close()
-    except Exception:
+        # Pydoll uses .stop(), Playwright/ZenDriver use .close()
+        if hasattr(context, "stop") and callable(getattr(context, "stop")):
+            await context.stop()
+        elif hasattr(context, "close") and callable(getattr(context, "close")):
+            await context.close()
+        print(f"Closed browser for profile {profile_id}")
+    except Exception as e:
+        print(f"Error closing browser for profile {profile_id}: {e}")
         pass
 
     await repo.set_running(profile_id, False)
