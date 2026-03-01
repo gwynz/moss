@@ -4,10 +4,12 @@ from typing import Any, Callable, Optional
 from camoufox.async_api import AsyncCamoufox
 from browserforge.fingerprints import Screen
 from playwright.async_api import Browser, BrowserContext
-from .engine_utils import DB_DIR
+from .engine_utils import DB_DIR, METAMASK_FIREFOX_DIR
+
 
 async def launch(profile: dict, on_close: Callable[[str], Any]) -> Any:
     profile_id = profile["id"]
+    ext_metamask = profile.get("ext_metamask", False)
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
         user_data_dir = str(DB_DIR / "browser_data" / "camoufox" / profile_id)
@@ -35,6 +37,10 @@ async def launch(profile: dict, on_close: Callable[[str], Any]) -> Any:
         "main_world_eval": True,
     }
 
+    if ext_metamask and METAMASK_FIREFOX_DIR.exists():
+        launch_kwargs["addons"] = [str(METAMASK_FIREFOX_DIR)]
+        # launch_kwargs["allow_addon_new_tab"] = True !! no update yet
+
     screen_width = profile.get("screen_width")
     screen_height = profile.get("screen_height")
     if screen_width and screen_height:
@@ -61,5 +67,6 @@ async def launch(profile: dict, on_close: Callable[[str], Any]) -> Any:
             page = await context.new_page()
             await page.goto(startup_url)
 
-    context.on("close", lambda _ctx: asyncio.ensure_future(on_close(profile_id)))
+    context.on("close", lambda _ctx: asyncio.ensure_future(
+        on_close(profile_id)))
     return context

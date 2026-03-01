@@ -78,46 +78,59 @@ async def download_brave(progress_callback=None):
         if progress_callback: progress_callback(f"Error: {str(e)}", 0)
         raise e
 
+EXTENSIONS_DIR = DB_DIR / "extensions"
+METAMASK_CHROME_DIR = EXTENSIONS_DIR / "chrome" / "metamask"
+METAMASK_FIREFOX_DIR = EXTENSIONS_DIR / "firefox" / "metamask"
+
 def is_metamask_installed() -> bool:
-    """Checks if the Chrome MetaMask extension is downloaded and extracted."""
-    return METAMASK_CHROME_DIR.exists() and (METAMASK_CHROME_DIR / "manifest.json").exists()
+    """Checks if both Chrome and Firefox MetaMask extensions are downloaded and extracted."""
+    chrome_ok = METAMASK_CHROME_DIR.exists() and (METAMASK_CHROME_DIR / "manifest.json").exists()
+    firefox_ok = METAMASK_FIREFOX_DIR.exists() and (METAMASK_FIREFOX_DIR / "manifest.json").exists()
+    return chrome_ok and firefox_ok
 
 async def download_metamask(progress_callback=None):
-    """Downloads and extracts MetaMask extension for Chrome."""
+    """Downloads and extracts MetaMask extension for both Chrome and Firefox."""
     EXTENSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    (EXTENSIONS_DIR / "chrome").mkdir(parents=True, exist_ok=True)
 
-    # Official GitHub release link for MetaMask 12.10.1
-    url = "https://github.com/MetaMask/metamask-extension/releases/download/v12.10.1/metamask-chrome-12.10.1.zip"
+    # Versions and URLs
+    VERSION = "12.10.1"
+    CHROME_URL = f"https://github.com/MetaMask/metamask-extension/releases/download/v{VERSION}/metamask-chrome-{VERSION}.zip"
+    FIREFOX_URL = f"https://github.com/MetaMask/metamask-extension/releases/download/v{VERSION}/metamask-firefox-{VERSION}.zip"
 
-    if progress_callback: progress_callback("Downloading MetaMask...", 0.1)
-
-    def _sync_download():
+    def _sync_download(url, name):
+        if progress_callback: progress_callback(f"Downloading MetaMask ({name})...", 0.1)
         response = requests.get(url, stream=True, timeout=60.0)
         response.raise_for_status()
-        zip_path = EXTENSIONS_DIR / "metamask.zip"
+        zip_path = EXTENSIONS_DIR / f"metamask_{name}.zip"
         with open(zip_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk: f.write(chunk)
         return zip_path
 
-    try:
-        zip_path = await asyncio.to_thread(_sync_download)
+    async def _process_variant(url, name, target_dir):
+        zip_path = await asyncio.to_thread(_sync_download, url, name)
 
-        if progress_callback: progress_callback("Extracting MetaMask...", 0.6)
-        if METAMASK_CHROME_DIR.exists():
-            shutil.rmtree(METAMASK_CHROME_DIR, ignore_errors=True)
-        METAMASK_CHROME_DIR.mkdir(parents=True, exist_ok=True)
+        if progress_callback: progress_callback(f"Extracting MetaMask ({name})...", 0.6)
+        if target_dir.exists():
+            shutil.rmtree(target_dir, ignore_errors=True)
+        target_dir.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(METAMASK_CHROME_DIR)
+            zip_ref.extractall(target_dir)
 
         os.remove(zip_path)
-        if progress_callback: progress_callback("MetaMask ready!", 1.0)
+
+    try:
+        # Download and extract both
+        await _process_variant(CHROME_URL, "chrome", METAMASK_CHROME_DIR)
+        await _process_variant(FIREFOX_URL, "firefox", METAMASK_FIREFOX_DIR)
+
+        if progress_callback: progress_callback("MetaMask ready for all engines!", 1.0)
         return True
     except Exception as e:
         if progress_callback: progress_callback(f"Error: {str(e)}", 0)
         raise e
+
 
 def ensure_extension_extracted(name: str, target_dir: Path) -> bool:
     """If name.zip exists in root, delete target_dir and extract fresh."""

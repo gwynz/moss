@@ -1,7 +1,12 @@
 import flet as ft
+import asyncio
 
 
 from mosses.profiles.index._profile_proxy import ProxyTest
+from services.engine_utils import (
+    is_brave_installed, download_brave,
+    is_metamask_installed, download_metamask
+)
 from services.proxy_repo import pick_random_proxy
 from services.fingerprint_defaults import (
     USER_AGENTS, PLATFORMS, LANGUAGES,
@@ -30,7 +35,6 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["geo_accuracy"] = 100.0
         defaults["media_devices"] = ""
         defaults["ext_metamask"] = False
-        defaults["ext_phantom"] = False
         defaults["browser_type"] = "pydoll"
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
@@ -41,10 +45,25 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     form_data, set_form_data = ft.use_state(make_initial())
     active_tab, set_active_tab = ft.use_state(0)
 
+    # Browser download state
+    is_browser_ready, set_is_browser_ready = ft.use_state(is_brave_installed())
+    download_progress, set_download_progress = ft.use_state(0.0)
+    download_status, set_download_status = ft.use_state("")
+    is_downloading, set_is_downloading = ft.use_state(False)
+
+    # MetaMask state
+    is_mm_ready, set_is_mm_ready = ft.use_state(is_metamask_installed())
+    mm_status, set_mm_status = ft.use_state("")
+
     def update_field(key, value):
         new_data = dict(form_data)
         new_data[key] = value
         set_form_data(new_data)
+        if key == "browser_type":
+            if value in ["pydoll", "zendriver"]:
+                set_is_browser_ready(is_brave_installed())
+            else:
+                set_is_browser_ready(True)
 
     def on_quick_add(e):
         val = e.control.value.strip()
@@ -83,10 +102,42 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data["notes"] = current_notes
         # Preserve proxy/advanced settings
         for key in ("proxy_type", "proxy_host", "proxy_port", "proxy_username",
-                    "proxy_password", "fonts", "media_devices", "ext_metamask", "ext_phantom",
+                    "proxy_password", "fonts", "media_devices", "ext_metamask",
                     "extensions_path", "startup_url", "cookies", "geoip"):
             new_data[key] = form_data.get(key, "")
         set_form_data(new_data)
+
+    async def on_download_click(_):
+        if is_downloading:
+            return
+
+        set_is_downloading(True)
+        set_download_status("Starting...")
+
+        def progress(msg, val):
+            set_download_status(msg)
+            set_download_progress(val)
+
+        try:
+            await download_brave(progress)
+            set_is_browser_ready(True)
+        except Exception as ex:
+            set_download_status(f"Error: {str(ex)}")
+        finally:
+            set_is_downloading(False)
+
+    async def on_download_mm(_):
+        if is_downloading:
+            return
+        set_is_downloading(True)
+        set_mm_status("Downloading...")
+        try:
+            await download_metamask(lambda msg, _: set_mm_status(msg))
+            set_is_mm_ready(is_metamask_installed())
+        except Exception as ex:
+            set_mm_status(f"Error: {ex}")
+        finally:
+            set_is_downloading(False)
 
     def do_save(_):
         if not form_data.get("name", "").strip():
@@ -138,10 +189,55 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         )
 
     # === Tab 1: Profile ===
+    download_section = ft.Container()
+    if not is_browser_ready and form_data.get("browser_type") in ["pydoll", "zendriver"]:
+        download_section = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Icon(ft.Icons.WARNING_ROUNDED,
+                            color=ft.Colors.ORANGE_700),
+                    ft.Text("Brave Browser Required",
+                            color=ft.Colors.ORANGE_700, weight=ft.FontWeight.BOLD),
+                ]),
+                ft.Text(
+                    "A local Brave browser is required for Pydoll/Zendriver.", size=12),
+                ft.Row([
+                    ft.FilledButton(
+                        "Download Brave",
+                        icon=ft.Icons.DOWNLOAD,
+                        on_click=on_download_click,
+                        disabled=is_downloading
+                    ),
+                    ft.Text(download_status, size=11, italic=True)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.ProgressBar(
+                    value=download_progress, width=400) if is_downloading or download_progress > 0 else ft.Container()
+            ], spacing=8),
+            padding=12,
+            bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.ORANGE_100),
+            border_radius=8,
+            border=ft.Border(bottom=ft.BorderSide(1, ft.Colors.ORANGE_200))
+        )
+    elif is_browser_ready and form_data.get("browser_type") in ["pydoll", "zendriver"]:
+        download_section = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.CHECK_CIRCLE,
+                        color=ft.Colors.GREEN_700, size=20),
+                ft.Text("Brave browser ready",
+                        color=ft.Colors.GREEN_700, size=12),
+                ft.FilledButton(
+                    "Download", icon=ft.Icons.DOWNLOAD, disabled=True)
+            ], spacing=10),
+            padding=8,
+            bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.GREEN_100),
+            border_radius=8,
+        )
+
     profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
         dropdown_field("Browser Engine", "browser_type", [
                        "camoufox", "zendriver", "pydoll"]),
+        download_section,
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 
@@ -265,13 +361,17 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
                 on_change=lambda e: update_field(
                     "ext_metamask", e.control.value),
             ),
-            ft.Checkbox(
-                label="Phantom",
-                value=bool(form_data.get("ext_phantom", False)),
-                on_change=lambda e: update_field(
-                    "ext_phantom", e.control.value),
+            ft.FilledButton(
+                "Download Extension" if not is_mm_ready else "Extension Ready",
+                icon=ft.Icons.DOWNLOAD if not is_mm_ready else ft.Icons.CHECK_CIRCLE,
+                on_click=on_download_mm,
+                disabled=is_mm_ready or is_downloading,
+                visible=bool(form_data.get("ext_metamask", False)),
+                height=35,
             ),
-        ], spacing=20),
+            ft.Text(mm_status, size=11, italic=True,
+                    color=ft.Colors.GREY_500) if mm_status else ft.Container(),
+        ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
         ft.Divider(),
         ft.Text("Custom Extensions", size=14, weight=ft.FontWeight.W_500),
         text_field("Extensions Path (unpacked)", "extensions_path"),
@@ -300,7 +400,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
                 "Save",
                 icon=ft.Icons.SAVE,
                 on_click=do_save,
-                disabled=not form_data.get("name", "").strip(),
+                disabled=not form_data.get(
+                    "name", "").strip() or not is_browser_ready,
             ),
         ],
         vertical_alignment=ft.CrossAxisAlignment.CENTER,

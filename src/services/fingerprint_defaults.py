@@ -81,8 +81,8 @@ def generate_random_fingerprint() -> dict:
     # devicePixelRatio is found in the screen object
     pixel_ratio = getattr(screen, "devicePixelRatio", 1.0)
 
-    hardware_concurrency = navigator.hardwareConcurrency
-    device_memory = navigator.deviceMemory
+    hardware_concurrency = navigator.hardwareConcurrency or 4
+    device_memory = 4
 
     # videoCard can be None in some fingerprints
     webgl_vendor = getattr(

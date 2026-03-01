@@ -30,78 +30,78 @@ def InstructionView():
                     column_spacing=20,
                     columns=[
                         ft.DataColumn(
-                            ft.Text("Engine", weight=ft.FontWeight.BOLD)),
+                            ft.Text("Tool", weight=ft.FontWeight.BOLD)),
                         ft.DataColumn(
-                            ft.Text("Core", weight=ft.FontWeight.BOLD)),
+                            ft.Text("Core Engine", weight=ft.FontWeight.BOLD)),
                         ft.DataColumn(
-                            ft.Text("Playwright?", weight=ft.FontWeight.BOLD)),
+                            ft.Text("Core Tool", weight=ft.FontWeight.BOLD)),
                         ft.DataColumn(
                             ft.Text("Extensions", weight=ft.FontWeight.BOLD)),
                         ft.DataColumn(
                             ft.Text("Proxy", weight=ft.FontWeight.BOLD)),
-                        ft.DataColumn(ft.Text("Button Download",
+                        ft.DataColumn(ft.Text("Download Engine",
                                       weight=ft.FontWeight.BOLD)),
                     ],
                     rows=[
                         ft.DataRow(cells=[
                             ft.DataCell(
-                                ft.Text("Camoufox", weight=ft.FontWeight.W_600)),
-                            ft.DataCell(ft.Text("Firefox")),
-                            ft.DataCell(ft.Text("Yes")),
-                            ft.DataCell(ft.Text("Auto Add")),
+                                ft.Text("PyDoll", weight=ft.FontWeight.W_600)),
+                            ft.DataCell(ft.Text("Chromium")),
+                            ft.DataCell(ft.Text("No")),
+                            ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                                "Brave", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                        ]),
+                        ft.DataRow(cells=[
+                            ft.DataCell(
+                                ft.Text("Camoufox", weight=ft.FontWeight.W_600)),
+                            ft.DataCell(ft.Text("Firefox")),
+                            ft.DataCell(ft.Text("Based Playwright")),
+                            ft.DataCell(ft.Text("Auto")),
+                            ft.DataCell(ft.Text("Auto")),
+                            ft.DataCell(ft.Button(
+                                "Firefox", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
                             ft.DataCell(
                                 ft.Text("ZenDriver", weight=ft.FontWeight.W_600)),
-                            ft.DataCell(ft.Text("Chrome")),
-                            ft.DataCell(ft.Text("No")),
-                            ft.DataCell(ft.Text("Manual")),
+                            ft.DataCell(ft.Text("Chromium")),
+                            ft.DataCell(ft.Text("Based on nodriver")),
+                            ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Text("Manual")),
                             ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
-                        ]),
-                        ft.DataRow(cells=[
-                            ft.DataCell(
-                                ft.Text("PyDoll", weight=ft.FontWeight.W_600)),
-                            ft.DataCell(ft.Text("Chrome")),
-                            ft.DataCell(ft.Text("No")),
-                            ft.DataCell(ft.Text("Auto Add")),
-                            ft.DataCell(ft.Text("Auto Add")),
-                            ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                                "Brave", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
                             ft.DataCell(
                                 ft.Text("Playwright", weight=ft.FontWeight.W_600)),
                             ft.DataCell(ft.Text("Chromium")),
-                            ft.DataCell(ft.Text("Yes")),
-                            ft.DataCell(ft.Text("Auto Add")),
+                            ft.DataCell(ft.Text("No")),
+                            ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                                "Brave", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
                             ft.DataCell(
                                 ft.Text("NoDriver", weight=ft.FontWeight.W_600)),
-                            ft.DataCell(ft.Text("Chrome")),
+                            ft.DataCell(ft.Text("Chromium")),
                             ft.DataCell(ft.Text("No")),
-                            ft.DataCell(ft.Text("Manual (Omega)")),
-                            ft.DataCell(ft.Text("Yes")),
+                            ft.DataCell(ft.Text("Auto")),
+                            ft.DataCell(ft.Text("Auto")),
                             ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                                "Brave", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                         ft.DataRow(cells=[
                             ft.DataCell(
                                 ft.Text("Cloak", weight=ft.FontWeight.W_600, color=ft.Colors.GREY_500)),
-                            ft.DataCell(ft.Text("Chrome")),
+                            ft.DataCell(ft.Text("Chromium")),
                             ft.DataCell(ft.Text("Plan")),
                             ft.DataCell(ft.Text("Coming Soon")),
                             ft.DataCell(ft.Text("Coming Soon")),
                             ft.DataCell(ft.Button(
-                                "Download", icon=ft.Icons.DOWNLOAD, disabled=True)),
+                                "Coming Soon", icon=ft.Icons.DOWNLOAD, disabled=True)),
                         ]),
                     ]
                 ),

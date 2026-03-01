@@ -24,22 +24,22 @@ Moss is a professional Flet-based interface designed to centralize the managemen
 
 Moss supports various browser engines to suit different automation and privacy needs.
 
-| Engine | Core | Based on Playwright? | Integrated Extensions | Integrated Proxy | Downloaded Browser? |
+| Tool | Core Engine | Core Tool | Extensions | Proxy | Download Engine |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Camoufox** | Firefox | **Yes** | Yes (Automatic Added) | Yes (Automatic) | `Enabled` |
-| **ZenDriver** | Chrome | **No** | Manual | Manual | `Enabled` |
-| **PyDoll** | Chrome | **No** | Yes (Automatic Added) | Yes (Automatic Added) | `Disabled` |
-| **Playwright** | Chromium | **Yes** | Yes (Automatic Added) | Yes (Automatic) | `Enabled` |
-| **NoDriver** | Chrome | **No** | Manual (Omega) | Yes | `Disabled` |
-| **Cloak** | Chrome | **Plan** | Coming Soon | Coming Soon | `Disabled` |
+| **PyDoll** | Chromium | No | Auto | Auto | Brave |
+| **Camoufox** | Firefox | Based Playwright | Auto | Auto | Firefox |
+| **ZenDriver** | Chromium | Based on nodriver | Auto | Manual | Brave |
+| **Playwright** | Chromium | No | Auto | Auto | Brave |
+| **NoDriver** | Chromium | No | Auto | Auto | Brave |
+| **Cloak** | Chromium | Plan | Coming Soon | Coming Soon | Coming Soon |
 
 ### Usage Notes:
-*   **Camoufox**: Best for high-fidelity fingerprinting. It automatically downloads its own patched Firefox binary (`Enabled`).
-*   **NoDriver**: Uses an undetected approach without a Webdriver. It supports integrated proxies and uses the system Chrome (`Disabled`). For complex extension management, it is recommended to use manual settings or extensions like **Proxy SwitchyOmega**.
-*   **ZenDriver**: Powerful Automation engine. It handles its own browser download (`Enabled`), but currently requires manual setup for extensions and proxies.
-*   **Playwright**: Standard automation engine. Downloads Chromium via Playwright command (`Enabled`).
-*   **PyDoll**: Lightweight Chrome-based engine. Uses system or manually provided browser binaries (`Disabled`).
-*   **Cloak**: Currently in development focusing on advanced Linux-based isolation (`Disabled`).
+*   **Camoufox**: Best for high-fidelity fingerprinting. It automatically downloads its own patched Firefox binary.
+*   **ZenDriver**: Powerful automation engine. It handles its own browser download, but requires manual setup for now.
+*   **NoDriver**: Uses an undetected CDPSession approach. Supports integrated proxies and uses system Chrome.
+*   **PyDoll**: Lightweight Chrome-based engine using system or manually provided binaries.
+*   **Playwright**: Standard automation engine. Downloads Chromium via Playwright command.
+*   **Cloak**: Currently in development focusing on advanced Linux-based isolation.
 
 ## 🚀 Installation & Running
 
