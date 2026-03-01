@@ -1,6 +1,7 @@
 import flet as ft
 from utils.crypto import initialize_session
 
+
 @ft.component
 def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
     password_ref = ft.use_ref()
@@ -61,7 +62,7 @@ def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
                                 on_click=on_login,
                             ),
                             ft.Text(
-                                "Note: Password cannot be reset or changed. Loss of password means permanent loss of encrypted data (Wallet).",
+                                "Note: Password cannot be reset or changed. Loss of password means permanent loss of encrypted data (Seed phrases).",
                                 size=11,
                                 italic=True,
                                 color=ft.Colors.ERROR,
