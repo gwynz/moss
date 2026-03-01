@@ -1,0 +1,80 @@
+import flet as ft
+from utils.crypto import initialize_session
+
+@ft.component
+def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
+    password_ref = ft.use_ref()
+
+    def on_login(e):
+        if not password_ref.current.value:
+            return
+        if initialize_session(password_ref.current.value):
+            on_login_success(e)
+        else:
+            password_ref.current.error_text = "Incorrect password"
+            ft.context.page.update()
+
+    return ft.View(
+        route="/login",
+        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        controls=[
+            ft.Card(
+                content=ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Icon(
+                                ft.Icons.LOCK_PERSON_OUTLINED,
+                                size=80,
+                                color=ft.Colors.PRIMARY,
+                            ),
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        "Master Password Required",
+                                        size=24,
+                                        weight=ft.FontWeight.BOLD,
+                                    ),
+                                    ft.Text(
+                                        "Set a master password to encrypt your sensitive data. Don't lose it!"
+                                        if needs_setup
+                                        else "Enter your password to unlock the application.",
+                                        text_align=ft.TextAlign.CENTER,
+                                        color=ft.Colors.ON_SURFACE_VARIANT,
+                                    ),
+                                ],
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            ),
+                            ft.TextField(
+                                ref=password_ref,
+                                label="Master Password",
+                                password=True,
+                                can_reveal_password=True,
+                                width=320,
+                                on_submit=on_login,
+                                autofocus=True,
+                            ),
+                            ft.ElevatedButton(
+                                "Set Password" if needs_setup else "Unlock",
+                                width=320,
+                                height=50,
+                                on_click=on_login,
+                            ),
+                            ft.Text(
+                                "Note: Password cannot be reset or changed. Loss of password means permanent loss of encrypted data (Wallet).",
+                                size=11,
+                                italic=True,
+                                color=ft.Colors.ERROR,
+                                text_align=ft.TextAlign.CENTER,
+                                width=320,
+                            ),
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=30,
+                    ),
+                    padding=40,
+                    width=400,
+                )
+            )
+        ],
+    )
