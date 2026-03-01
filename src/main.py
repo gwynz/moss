@@ -27,4 +27,4 @@ if __name__ == "__main__":
         diagnostics.enable_for_page(page)
         page.render_views(lambda: App(moss))
 
-    ft.app(main, assets_dir="assets")
+    ft.run(main, assets_dir="assets")
