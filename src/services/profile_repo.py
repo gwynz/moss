@@ -19,7 +19,7 @@ _MUTABLE_COLUMNS = [
     "ext_metamask",
     "browser_type",
     "extensions_path", "startup_url", "cookies",
-    "user_data_dir", "is_running",
+    "user_data_dir", "is_running", "wallet_id",
 ]
 
 _ALL_COLUMNS = ["id", "name", "notes", "created_at", "updated_at", "last_launched",
@@ -35,7 +35,7 @@ _ALL_COLUMNS = ["id", "name", "notes", "created_at", "updated_at", "last_launche
                 "ext_metamask",
                 "browser_type",
                 "extensions_path", "startup_url", "cookies",
-                "user_data_dir", "is_running",
+                "user_data_dir", "is_running", "wallet_id",
                 ]
 
 
@@ -46,11 +46,15 @@ def _row_to_dict(row) -> dict:
 async def list_profiles() -> list[dict]:
     conn = await get_connection()
     try:
-        cursor = await conn.execute(
-            f"SELECT {', '.join(_ALL_COLUMNS)} FROM profiles ORDER BY created_at DESC"
-        )
+        query = f"""
+            SELECT p.*, w.name as wallet_name, w.public_address as wallet_address
+            FROM profiles p
+            LEFT JOIN wallets w ON p.wallet_id = w.id
+            ORDER BY p.created_at DESC
+        """
+        cursor = await conn.execute(query)
         rows = await cursor.fetchall()
-        return [_row_to_dict(row) for row in rows]
+        return [dict(row) for row in rows]
     finally:
         await conn.close()
 
@@ -58,12 +62,15 @@ async def list_profiles() -> list[dict]:
 async def get_profile(profile_id: str) -> dict | None:
     conn = await get_connection()
     try:
-        cursor = await conn.execute(
-            f"SELECT {', '.join(_ALL_COLUMNS)} FROM profiles WHERE id = ?",
-            (profile_id,),
-        )
+        query = f"""
+            SELECT p.*, w.name as wallet_name, w.public_address as wallet_address
+            FROM profiles p
+            LEFT JOIN wallets w ON p.wallet_id = w.id
+            WHERE p.id = ?
+        """
+        cursor = await conn.execute(query, (profile_id,))
         row = await cursor.fetchone()
-        return _row_to_dict(row) if row else None
+        return dict(row) if row else None
     finally:
         await conn.close()
 

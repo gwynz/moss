@@ -2,12 +2,14 @@ import flet as ft
 import asyncio
 
 
+from contexts.route import RouteContext
 from mosses.profiles.index._profile_proxy import ProxyTest
 from services.engine_utils import (
     is_brave_installed, download_brave,
     is_metamask_installed, download_metamask
 )
-from services.proxy_repo import pick_random_proxy
+from services.proxy_repo import pick_random_proxy, list_proxies
+from services.wallet_repo import list_wallets
 from services.fingerprint_defaults import (
     USER_AGENTS, PLATFORMS, LANGUAGES,
     TIMEZONES, WEBGL_CONFIGS, HARDWARE_CONCURRENCIES, DEVICE_MEMORIES,
@@ -38,12 +40,26 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["browser_type"] = "pydoll"
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
-        defaults["cookies"] = ""
+        defaults["cookies"] = "[]"
         defaults["geoip"] = True
+        defaults["wallet_id"] = ""
         return defaults
 
+    route_ctx = ft.use_context(RouteContext)
     form_data, set_form_data = ft.use_state(make_initial())
     active_tab, set_active_tab = ft.use_state(0)
+    wallets, set_wallets = ft.use_state([])
+    proxies, set_proxies = ft.use_state([])
+
+    # Fetch wallets & proxies
+    async def fetch_initial_data():
+        w_task = list_wallets()
+        p_task = list_proxies()
+        wlist, plist = await asyncio.gather(w_task, p_task)
+        set_wallets(wlist)
+        set_proxies(plist)
+
+    ft.on_mounted(fetch_initial_data)
 
     # Browser download state
     is_browser_ready, set_is_browser_ready = ft.use_state(is_brave_installed())
@@ -94,6 +110,20 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data["proxy_password"] = proxy.get("proxy_password", "")
         set_form_data(new_data)
 
+    def on_proxy_select(e):
+        proxy_id = e.control.value
+        if not proxy_id:
+            return
+        selected = next((p for p in proxies if str(p["id"]) == proxy_id), None)
+        if selected:
+            new_data = dict(form_data)
+            new_data["proxy_type"] = selected.get("proxy_type", "http")
+            new_data["proxy_host"] = selected.get("proxy_host", "")
+            new_data["proxy_port"] = selected.get("proxy_port", 0)
+            new_data["proxy_username"] = selected.get("proxy_username", "")
+            new_data["proxy_password"] = selected.get("proxy_password", "")
+            set_form_data(new_data)
+
     def randomize(_):
         current_name = form_data.get("name", "")
         current_notes = form_data.get("notes", "")
@@ -140,7 +170,12 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             set_is_downloading(False)
 
     def do_save(_):
+        page = ft.context.page
         if not form_data.get("name", "").strip():
+            sb = ft.SnackBar(ft.Text("Profile name is required!"))
+            page.overlay.append(sb)
+            sb.open = True
+            page.update()
             return
         on_save(form_data)
 
@@ -238,6 +273,23 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         dropdown_field("Browser Engine", "browser_type", [
                        "camoufox", "zendriver", "pydoll"]),
         download_section,
+        ft.Row([
+            ft.Dropdown(
+                label="Wallet",
+                value=str(form_data.get("wallet_id", "") or ""),
+                options=[ft.DropdownOption(key=str(w["id"]), text=f"{w['public_address']} - {w["name"]} {w['note']}")
+                         for w in wallets],
+                on_select=lambda e: update_field("wallet_id", e.control.value),
+                text_size=13,
+                editable=True,
+                expand=True,
+            ),
+            ft.TextButton(
+                "Manage Wallet",
+                icon=ft.Icons.OPEN_IN_NEW,
+                on_click=lambda _: route_ctx.navigate("/wallets/index"),
+            ),
+        ]),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 
@@ -316,15 +368,28 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     ]
 
     # === Tab 5: Network ===
+    # Find if current form host/port matches a saved proxy to keep dropdown selected
+    current_proxy_id = next(
+        (str(p["id"]) for p in proxies if
+         p.get("proxy_host") == form_data.get("proxy_host") and
+         str(p.get("proxy_port")) == str(form_data.get("proxy_port"))),
+        None
+    )
+
     network_controls: list[ft.Control] = [
         ft.Row([
-            ft.TextField(
-                label="Quick Add (host:port:user:pass)",
-                on_change=on_quick_add,
-                value=f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}" if form_data.get(
-                    "proxy_host", "") and form_data.get("proxy_port", 0) and form_data.get("proxy_username", "") and form_data.get("proxy_password", "") else "",
+            ft.Dropdown(
+                label="Select Proxy",
+                options=[
+                    ft.DropdownOption(
+                        key=str(p["id"]),
+                        text=f"{p['name']} ({p.get('proxy_host')}:{p.get('proxy_port')})" if p.get(
+                            "name") else f"{p.get('proxy_host')}:{p.get('proxy_port')}"
+                    ) for p in proxies
+                ],
+                on_select=on_proxy_select,
+                value=current_proxy_id,
                 text_size=13,
-                hint_text="example.com:8080:username:password",
                 expand=True,
             ),
             ft.TextButton(
@@ -332,7 +397,22 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
                 icon=ft.Icons.SHUFFLE,
                 on_click=on_random_proxy,
             ),
+            ft.TextButton(
+                "Manage Proxy",
+                icon=ft.Icons.OPEN_IN_NEW,
+                on_click=lambda _: route_ctx.navigate("/proxies/index"),
+            ),
         ]),
+        ft.Divider(),
+        ft.TextField(
+            label="Shortcut (host:port:user:pass)",
+            on_change=on_quick_add,
+            value=f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}" if form_data.get(
+                "proxy_host", "") and form_data.get("proxy_port", 0) and form_data.get("proxy_username", "") and form_data.get("proxy_password", "") else "",
+            text_size=13,
+            hint_text="example.com:8080:username:password",
+            expand=True,
+        ),
         ft.Divider(),
         dropdown_field("Proxy Type", "proxy_type", ["http", "socks5"]),
         text_field("Proxy Host", "proxy_host"),

@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     -- Runtime
     browser_type TEXT NOT NULL DEFAULT 'camoufox',
     user_data_dir TEXT NOT NULL DEFAULT '',
-    is_running INTEGER NOT NULL DEFAULT 0
+    is_running INTEGER NOT NULL DEFAULT 0,
+    wallet_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS proxies (
@@ -73,6 +74,17 @@ CREATE TABLE IF NOT EXISTS proxies (
     proxy_port INTEGER NOT NULL,
     proxy_username TEXT NOT NULL DEFAULT '',
     proxy_password TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS wallets (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    public_address TEXT NOT NULL,
+    seed TEXT NOT NULL,          -- Encrypted string
+    seed_type TEXT NOT NULL,     -- '12 words' or '24 words'
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -98,6 +110,13 @@ async def init_db() -> None:
     conn = await get_connection()
     try:
         await conn.executescript(_SCHEMA)
+        # Handle migrations for existing databases
+        try:
+            await conn.execute("ALTER TABLE profiles ADD COLUMN wallet_id TEXT")
+        except aiosqlite.OperationalError:
+            # Column already exists
+            pass
+
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")
         await conn.commit()

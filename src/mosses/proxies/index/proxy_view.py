@@ -33,11 +33,7 @@ def ProxyManager():
         finally:
             model.is_loading = False
 
-    def on_mount():
-        asyncio.create_task(startup())
-        return None
-
-    ft.use_effect(on_mount, [])
+    ft.on_mounted(lambda: asyncio.create_task(startup()))
 
     async def refresh_proxies():
         proxies = await repo.list_proxies()
@@ -194,7 +190,7 @@ def ProxyManager():
             ft.FilledButton(
                 content=ft.Row([
                     ft.ProgressRing(width=16, height=16, stroke_width=2,
-                                   color=ft.Colors.WHITE) if is_importing else ft.Icon(ft.Icons.DOWNLOAD),
+                                    color=ft.Colors.WHITE) if is_importing else ft.Icon(ft.Icons.DOWNLOAD),
                     ft.Text("Importing..." if is_importing else "Import"),
                 ], tight=True),
                 on_click=lambda e: asyncio.create_task(

@@ -1,5 +1,6 @@
 import importlib.util
 import sys
+import types
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,6 +56,13 @@ class Moss:
                 icon=ft.Icons.NETWORK_WIFI,
                 selected_icon=ft.Icons.NETWORK_WIFI_SHARP,
             ),
+            ControlGroup(
+                name="wallets",
+                label="Wallets",
+                icon=ft.Icons.WALLET,
+                selected_icon=ft.Icons.WALLET_SHARP,
+            ),
+
             # ControlGroup(
             #     name="layout",
             #     label="Layout",
@@ -207,21 +215,34 @@ class Moss:
         return grid_item
 
     def _import_module(self, file_path: Path):
-        module_name = ".".join(
-            file_path.relative_to(self._mosses_root).with_suffix("").parts
-        )
+        parts = file_path.relative_to(self._mosses_root).with_suffix("").parts
+        module_name = ".".join(parts)
+
         if module_name in sys.modules:
-            print(f"{module_name!r} already in sys.modules")
             return sys.modules[module_name]
+
+        # Ensure parent packages exist in sys.modules for relative imports to work
+        for i in range(1, len(parts)):
+            pkg_name = ".".join(parts[:i])
+            if pkg_name not in sys.modules:
+                pkg_module = types.ModuleType(pkg_name)
+                # Set __path__ so it's treated as a package
+                pkg_path = self._mosses_root.joinpath(*parts[:i])
+                pkg_module.__path__ = [str(pkg_path)]
+                sys.modules[pkg_name] = pkg_module
 
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Cannot load spec for {file_path}")
 
         module = importlib.util.module_from_spec(spec)
+
+        # Ensure __package__ is set correctly for relative imports
+        if len(parts) > 1:
+            module.__package__ = ".".join(parts[:-1])
+
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
-        # print(f"{module_name!r} has been imported")
         return module
 
     @staticmethod

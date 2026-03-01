@@ -104,6 +104,14 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     if ua_preview:
         details.append(ua_preview)
 
+    wallet_name = profile.get("wallet_name")
+    wallet_address = profile.get("wallet_address")
+    if wallet_name or wallet_address:
+        w_display = f"{wallet_name} - {wallet_address}" if wallet_name and wallet_address else (wallet_name or wallet_address)
+        details.append(
+            ft.Text(w_display, size=11, color=ft.Colors.GREY_500, max_lines=1)
+        )
+
     if notes_preview:
         details.append(notes_preview)
 
