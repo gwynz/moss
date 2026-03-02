@@ -41,6 +41,7 @@ _MUTABLE_COLUMNS = [
     "user_data_dir",
     "is_running",
     "wallet_id",
+    "metamask_password",
 ]
 
 _ALL_COLUMNS = [
@@ -82,6 +83,7 @@ _ALL_COLUMNS = [
     "user_data_dir",
     "is_running",
     "wallet_id",
+    "metamask_password",
 ]
 
 

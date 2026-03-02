@@ -98,6 +98,7 @@ def ProfileManager():
 
             # Launch and get browser
             from services import pydoll_engine
+            from utils.crypto import decrypt_string
 
             context, tab = await pydoll_engine.launch(fresh)
             print("Browser:", context)
@@ -107,11 +108,15 @@ def ProfileManager():
                 await repo.set_running(pid, True)
                 model.set_running(pid, True)
 
+                # Get stored password or use default
+                mm_pass_enc = fresh.get("metamask_password")
+                mm_pass = decrypt_string(mm_pass_enc) if mm_pass_enc else "Password123!"
+
                 # Run the automation
                 await pydoll_engine.import_metamask_wallet(
                     tab,
                     seed_phrase=wallet["seed"],
-                    password="Password123!",  # Hardcoded as base in test.metamask.py
+                    password=mm_pass,
                 )
         except Exception as e:
             model.error_message = f"Wallet import failed: {e}"

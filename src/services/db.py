@@ -1,4 +1,5 @@
 import aiosqlite
+import sqlite3
 from pathlib import Path
 
 _DB_DIR = Path.home() / ".moss"
@@ -63,7 +64,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     browser_engine TEXT NOT NULL DEFAULT '',
     user_data_dir TEXT NOT NULL DEFAULT '',
     is_running INTEGER NOT NULL DEFAULT 0,
-    wallet_id TEXT
+    wallet_id TEXT,
+    metamask_password TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS proxies (
@@ -111,6 +113,16 @@ async def init_db() -> None:
     conn = await get_connection()
     try:
         await conn.executescript(_SCHEMA)
+
+        # Migration: Add metamask_password if it doesn't exist
+        try:
+            await conn.execute("SELECT metamask_password FROM profiles LIMIT 1")
+        except sqlite3.OperationalError:
+            print("Migrating database: Adding metamask_password column...")
+            await conn.execute(
+                "ALTER TABLE profiles ADD COLUMN metamask_password TEXT NOT NULL DEFAULT ''"
+            )
+            await conn.commit()
 
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")

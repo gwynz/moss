@@ -10,6 +10,7 @@ from services.engine_utils import (
     is_metamask_installed,
     download_metamask,
 )
+from utils.crypto import encrypt_string, decrypt_string
 from services.proxy_repo import pick_random_proxy, list_proxies
 from services.wallet_repo import list_wallets
 from services.fingerprint_defaults import (
@@ -52,6 +53,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["cookies"] = "[]"
         defaults["geoip"] = True
         defaults["wallet_id"] = ""
+        defaults["metamask_password"] = ""
         return defaults
 
     route_ctx = ft.use_context(RouteContext)
@@ -565,6 +567,22 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             ],
             spacing=10,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        ft.TextField(
+            label="MetaMask Password (for automation)",
+            value=decrypt_string(form_data.get("metamask_password", "")) or "Password123!",
+            password=True,
+            can_reveal_password=True,
+            text_size=13,
+            visible=bool(form_data.get("ext_metamask", False)),
+            on_change=lambda e: update_field("metamask_password", encrypt_string(e.control.value)),
+        ),
+        ft.Text(
+            "Encrypted on save. Defaults to Password123! if empty.",
+            size=11,
+            italic=True,
+            color=ft.Colors.GREY_500,
+            visible=bool(form_data.get("ext_metamask", False)),
         ),
         ft.Divider(),
         ft.Text("Custom Extensions", size=14, weight=ft.FontWeight.W_500),
