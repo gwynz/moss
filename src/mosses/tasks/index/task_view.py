@@ -132,29 +132,33 @@ def TaskManager():
     # --- UI Components ---
 
     if not profiles:
-        return ft.Column(
-            [
-                ft.Text("Task Manager", size=24, weight=ft.FontWeight.BOLD),
-                ft.Divider(),
-                ft.Container(
-                    content=ft.Column(
-                        [
-                            ft.Icon(
-                                ft.Icons.PERSON_OFF_OUTLINED,
-                                size=48,
-                                color=ft.Colors.GREY_500,
-                            ),
-                            ft.Text(
-                                "No profiles available to run tasks.",
-                                color=ft.Colors.GREY_500,
-                            ),
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.Text("Tasks", size=20, weight=ft.FontWeight.BOLD),
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Icon(
+                                    ft.Icons.PERSON_OFF_OUTLINED,
+                                    size=64,
+                                    color=ft.Colors.GREY_800,
+                                ),
+                                ft.Text(
+                                    "No profiles available to run tasks.",
+                                    size=16,
+                                    color=ft.Colors.GREY_500,
+                                ),
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        margin=ft.margin.only(top=100),
+                        alignment=ft.Alignment.CENTER,
                     ),
-                    alignment=ft.Alignment.CENTER,
-                    padding=40,
-                ),
-            ],
+                ],
+                expand=True,
+            ),
+            padding=16,
             expand=True,
         )
 
@@ -242,37 +246,60 @@ def TaskManager():
             )
         )
 
+    # Use a generic list or cast elements to avoid Pylance invariance issues
     column_controls: list[ft.Control] = [
         ft.Row(
-            [
-                ft.Text("Task Manager", size=24, weight=ft.FontWeight.BOLD),
-                ft.Container(expand=True),
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Row(
+                    spacing=10,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Dropdown(
+                            label="Select Task",
+                            value=selected_task_id,
+                            options=task_options,
+                            width=300,
+                            height=50,
+                            text_size=14,
+                            on_select=lambda e: set_selected_task_id(e.control.value),
+                            disabled=is_executing,
+                        ),
+                        ft.VerticalDivider(width=1),
+                        ft.TextButton(
+                            "Select All",
+                            icon=ft.Icons.SELECT_ALL,
+                            on_click=select_all,
+                            disabled=is_executing,
+                        ),
+                        ft.TextButton(
+                            "Clear",
+                            icon=ft.Icons.DESELECT,
+                            on_click=select_none,
+                            disabled=is_executing,
+                        ),
+                    ],
+                ),
                 ft.FilledButton(
                     "Start Batch",
                     icon=ft.Icons.PLAY_ARROW,
                     on_click=run_tasks,
                     disabled=is_executing or not selected_ids,
                 ),
-            ]
-        ),
-        ft.Divider(),
-        ft.Row(
-            [
-                ft.Dropdown(
-                    label="Select Task",
-                    value=selected_task_id,
-                    options=task_options,
-                    width=300,
-                    on_select=lambda e: set_selected_task_id(e.control.value),
-                    disabled=is_executing,
-                ),
-                ft.VerticalDivider(),
-                ft.TextButton("Select All", on_click=select_all, disabled=is_executing),
-                ft.TextButton(
-                    "Clear Selection", on_click=select_none, disabled=is_executing
-                ),
             ],
-            alignment=ft.MainAxisAlignment.START,
+        ),
+        (
+            ft.Container(
+                content=ft.Text(
+                    f"Support Device: {', '.join(t.upper() for t in current_task.supported_tools)} tool and {', '.join(e.upper() for e in current_task.supported_engines)} engine.",
+                    size=12,
+                    color=ft.Colors.GREY_700,
+                    italic=True,
+                ),
+            )
+            if current_task
+            else ft.Container()
         ),
         ft.Card(
             content=ft.Container(
@@ -301,8 +328,8 @@ def TaskManager():
         ),
     ]
 
-    return ft.Column(
-        column_controls,
-        spacing=20,
+    return ft.Container(
+        content=ft.Column(column_controls, spacing=15, expand=True),
+        padding=16,
         expand=True,
     )

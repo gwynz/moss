@@ -21,7 +21,7 @@ def InstructionView():
         content=ft.Column(
             [
                 ft.Text(
-                    "Browser Engines Comparison", size=24, weight=ft.FontWeight.BOLD
+                    "Browser Engines Comparison", size=20, weight=ft.FontWeight.BOLD
                 ),
                 ft.Text(
                     "Moss supports multiple browser engines to suit different automation and privacy needs.",

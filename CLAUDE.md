@@ -81,3 +81,18 @@ The `Moss` model auto-discovers and imports all moss modules at startup using `i
 ### Adding a new control group
 
 Add a `ControlGroup(name=..., label=..., icon=..., selected_icon=...)` entry to the list in `src/models/moss.py` and create the matching `src/mosses/<name>/` directory.
+
+### Adding a new automation task
+
+1. Open `src/services/task_registry.py`.
+2. Define a new class inheriting from `BaseTask`:
+   - `id`: unique machine-readable identifier.
+   - `name`: human-readable name shown in the Task Manager dropdown.
+   - `supported_tools`: list of engines that support this task (e.g., `["pydoll"]`).
+   - `supported_engines`: list of browsers compatible with this task (e.g., `["chrome"]`).
+3. Implement the `run(profile, tab, update_status)` method:
+   - Perform automation logic using the engine-specific `tab` object.
+   - Use the `update_status("msg")` callback to send feedback to the UI.
+   - Return a `str` (the "note") to persist in the database for task chaining (e.g., `"ready_for_swap"`).
+4. Optional: Override `get_required_profile_modifications(profile)` to provide runtime settings (like enabling extensions).
+5. Register your task by adding a class instance to the `TASKS` dictionary at the bottom of the file.

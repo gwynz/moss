@@ -327,13 +327,13 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ft.Row(
             [
                 dropdown_field(
-                    "Browser Engine",
+                    "Tool Type",
                     "tool_type",
                     ["camoufox", "zendriver", "pydoll"],
                     expand=True,
                 ),
                 dropdown_field(
-                    "Browser",
+                    "Browser Engine",
                     "browser_engine",
                     ["chrome", "brave"],
                     visible=form_data.get("tool_type") in ["pydoll", "zendriver"],
@@ -570,12 +570,15 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ),
         ft.TextField(
             label="MetaMask Password (for automation)",
-            value=decrypt_string(form_data.get("metamask_password", "")) or "Password123!",
+            value=decrypt_string(form_data.get("metamask_password", ""))
+            or "Password123!",
             password=True,
             can_reveal_password=True,
             text_size=13,
             visible=bool(form_data.get("ext_metamask", False)),
-            on_change=lambda e: update_field("metamask_password", encrypt_string(e.control.value)),
+            on_change=lambda e: update_field(
+                "metamask_password", encrypt_string(e.control.value)
+            ),
         ),
         ft.Text(
             "Encrypted on save. Defaults to Password123! if empty.",
