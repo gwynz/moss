@@ -12,23 +12,26 @@ from . import cloak_engine
 # profile_id -> BrowserContext or Browser object
 _running_contexts: dict[str, Any] = {}
 
+
 async def launch_profile(profile: dict) -> bool:
     profile_id = profile["id"]
     if profile_id in _running_contexts:
         return False
 
-    browser_type = profile.get("browser_type", "camoufox")
+    tool_type = profile.get("tool_type", "camoufox")
 
     try:
-        if browser_type == "zendriver":
-            context = await zendriver_engine.launch(profile)
-        elif browser_type == "pydoll":
-            context = await pydoll_engine.launch(profile)
-        elif browser_type == "cloakbrowser":
-            context = await cloak_engine.launch(profile)
+        if tool_type == "zendriver":
+            context, page = await zendriver_engine.launch(profile)
+        elif tool_type == "pydoll":
+            context, page = await pydoll_engine.launch(profile)
+        elif tool_type == "cloakbrowser":
+            raise NotImplementedError("CloakBrowser not yet supported")
         else:
             # Default to Camoufox
-            context = await camoufox_engine.launch(profile, on_close=_on_context_closed)
+            context, page = await camoufox_engine.launch(
+                profile, on_close=_on_context_closed
+            )
 
         _running_contexts[profile_id] = context
 
@@ -36,8 +39,9 @@ async def launch_profile(profile: dict) -> bool:
         await repo.set_last_launched(profile_id)
         return True
     except Exception as e:
-        print(f"Failed to launch {browser_type}: {e}")
+        print(f"Failed to launch {tool_type}: {e}")
         return False
+
 
 async def _on_context_closed(profile_id: str):
     _running_contexts.pop(profile_id, None)
@@ -45,6 +49,7 @@ async def _on_context_closed(profile_id: str):
         await repo.set_running(profile_id, False)
     except Exception:
         pass
+
 
 async def close_profile(profile_id: str) -> bool:
     context = _running_contexts.pop(profile_id, None)
@@ -54,6 +59,7 @@ async def close_profile(profile_id: str) -> bool:
     # Export cookies before closing
     try:
         import json
+
         if hasattr(context, "cookies") and callable(getattr(context, "cookies")):
             cookies = await context.cookies()
             if cookies:
@@ -76,10 +82,12 @@ async def close_profile(profile_id: str) -> bool:
     await repo.set_running(profile_id, False)
     return True
 
+
 def is_running(profile_id: str) -> bool:
     return profile_id in _running_contexts
 
-def supports_wallet_import(browser_type: str) -> bool:
+
+def supports_wallet_import(tool_type: str) -> bool:
     """Checks if the engine for the given browser type supports MetaMask import."""
     engines = {
         "camoufox": camoufox_engine,
@@ -87,11 +95,13 @@ def supports_wallet_import(browser_type: str) -> bool:
         "zendriver": zendriver_engine,
         "cloakbrowser": cloak_engine,
     }
-    engine_mod = engines.get(browser_type.lower())
+    engine_mod = engines.get(tool_type.lower())
     return hasattr(engine_mod, "import_metamask_wallet")
+
 
 async def export_cookies(profile_id: str) -> str | None:
     import json
+
     context = _running_contexts.get(profile_id)
     if context is None:
         return None
@@ -100,24 +110,30 @@ async def export_cookies(profile_id: str) -> str | None:
         return json.dumps(cookies, indent=2)
     return None
 
+
 async def import_cookies(profile_id: str, cookies_json: str) -> bool:
     import json
+
     context = _running_contexts.get(profile_id)
     if context is None:
         return False
     try:
         cookies = json.loads(cookies_json)
-        if hasattr(context, "add_cookies") and callable(getattr(context, "add_cookies")):
+        if hasattr(context, "add_cookies") and callable(
+            getattr(context, "add_cookies")
+        ):
             await context.add_cookies(cookies)
             return True
     except (json.JSONDecodeError, TypeError):
         pass
     return False
 
+
 async def close_all():
     profile_ids = list(_running_contexts.keys())
     for pid in profile_ids:
         await close_profile(pid)
+
 
 def _atexit_cleanup():
     try:
@@ -128,5 +144,6 @@ def _atexit_cleanup():
             loop.run_until_complete(close_all())
     except Exception:
         pass
+
 
 atexit.register(_atexit_cleanup)

@@ -93,7 +93,7 @@ def ProfileManager():
                 return
 
             # Force Pydoll for automation
-            fresh["browser_type"] = "pydoll"
+            fresh["tool_type"] = "pydoll"
             fresh["ext_metamask"] = True
 
             # Launch and get browser

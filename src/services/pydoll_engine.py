@@ -4,7 +4,13 @@ from pathlib import Path
 from pydoll.constants import PageLoadState
 from pydoll.browser.chromium import Chrome
 from pydoll.browser.options import ChromiumOptions
-from .engine_utils import DB_DIR, METAMASK_CHROME_DIR, get_brave_executable, METAMASK_ID
+from .engine_utils import (
+    DB_DIR,
+    METAMASK_CHROME_DIR,
+    get_browser_executable,
+    METAMASK_ID,
+    create_proxy_extension,
+)
 from services import profile_repo as repo
 
 
@@ -133,11 +139,14 @@ def create_full_stealth_options():
     return options
 
 
-async def launch(profile: dict, fast: bool = False):
+async def launch(profile: dict, fast: bool = False, proxy_mode: str = "ext_proxy"):
     profile_id = profile["id"]
+    browser_engine = profile.get("browser_engine", "chrome")
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
-        user_data_dir = str(DB_DIR / "browser_data" / "pydoll" / profile_id)
+        user_data_dir = str(
+            DB_DIR / "browser_data" / profile_id / "pydoll" / browser_engine
+        )
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     options = None
@@ -156,19 +165,36 @@ async def launch(profile: dict, fast: bool = False):
     options.add_argument(f"--window-size={int(width)},{int(height)}")
     options.add_argument("--window-position=0,0")
 
-    proxy_type = profile.get("proxy_type", "")
     proxy_host = profile.get("proxy_host", "")
     proxy_port = profile.get("proxy_port", 0)
-    if proxy_type and proxy_host and proxy_port:
-        user = profile.get("proxy_username", "")
-        password = profile.get("proxy_password", "")
-        if user and password:
-            proxy_url = f"{proxy_type}://{user}:{password}@{proxy_host}:{proxy_port}"
-        else:
-            proxy_url = f"{proxy_type}://{proxy_host}:{proxy_port}"
-        options.add_argument(f"--proxy-server={proxy_url}")
 
     load_ext_paths = []
+
+    if proxy_host and proxy_port:
+        user = profile.get("proxy_username", "")
+        password = profile.get("proxy_password", "")
+
+        if proxy_mode == "ext_proxy":
+            # Option 1: Extension Proxy (Best for Auth)
+            proxy_ext_path = await create_proxy_extension(
+                proxy_host, proxy_port, user, password
+            )
+            load_ext_paths.append(proxy_ext_path)
+            # Required for extensions to work with authentication scripts
+            options.add_argument(
+                "--disable-features=DisableLoadExtensionCommandLineSwitch"
+            )
+        else:
+            # Option 2: Tool Proxy (Standard flag)
+            proxy_type = profile.get("proxy_type", "http")
+            if user and password:
+                proxy_url = f"{proxy_type.lower()}://{user}:{password}@{proxy_host}:{proxy_port}"
+            else:
+                proxy_url = f"{proxy_type}://{proxy_host}:{proxy_port}"
+            options.add_argument(f"--proxy-server={proxy_url}")
+            options.add_argument(
+                "--proxy-bypass-list=<-loopback>,localhost,127.0.0.1,*.local,chrome-extension://*"
+            )
 
     if profile.get("ext_metamask"):
         if METAMASK_CHROME_DIR.exists():
@@ -185,11 +211,11 @@ async def launch(profile: dict, fast: bool = False):
         ext_arg = ",".join(load_ext_paths)
         options.add_argument(f"--load-extension={ext_arg}")
 
-    # Use local Brave if available
-    brave_exe = get_brave_executable()
-    if brave_exe and brave_exe.exists():
-        print(f"Using local Brave: {brave_exe}")
-        options.binary_location = str(brave_exe)
+    # Use local browser if available
+    browser_exe = get_browser_executable(browser_engine)
+    if browser_exe and browser_exe.exists():
+        print(f"Using local {browser_engine}: {browser_exe}")
+        options.binary_location = str(browser_exe)
 
     browser = Chrome(options=options)
 
