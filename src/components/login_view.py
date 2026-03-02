@@ -6,17 +6,18 @@ from utils.crypto import initialize_session
 @ft.component
 def LoginView(needs_setup: bool, on_login_success: Callable[[ft.ControlEvent], Any]):
     password_ref = ft.use_ref()
+    error_text, set_error_text = ft.use_state("")
 
     def on_login(e):
         password_field = cast(ft.TextField, password_ref.current)
         if not password_field or not password_field.value:
+            set_error_text("Password is required")
             return
 
         if initialize_session(password_field.value):
             on_login_success(e)
         else:
-            password_field.error_text = "Incorrect password"  # type: ignore
-            password_field.update()
+            set_error_text("Incorrect password")
 
     return ft.View(
         route="/login",
@@ -57,6 +58,12 @@ def LoginView(needs_setup: bool, on_login_success: Callable[[ft.ControlEvent], A
                                 width=320,
                                 on_submit=on_login,
                                 autofocus=True,
+                            ),
+                            ft.Text(
+                                error_text,
+                                color=ft.Colors.ERROR,
+                                size=12,
+                                visible=bool(error_text),
                             ),
                             ft.ElevatedButton(
                                 "Set Password" if needs_setup else "Unlock",

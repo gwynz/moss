@@ -59,7 +59,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     cookies TEXT NOT NULL DEFAULT '',
 
     -- Runtime
-    browser_type TEXT NOT NULL DEFAULT 'camoufox',
+    tool_type TEXT NOT NULL DEFAULT 'camoufox',
+    browser_engine TEXT NOT NULL DEFAULT '',
     user_data_dir TEXT NOT NULL DEFAULT '',
     is_running INTEGER NOT NULL DEFAULT 0,
     wallet_id TEXT
@@ -110,12 +111,6 @@ async def init_db() -> None:
     conn = await get_connection()
     try:
         await conn.executescript(_SCHEMA)
-        # Handle migrations for existing databases
-        try:
-            await conn.execute("ALTER TABLE profiles ADD COLUMN wallet_id TEXT")
-        except aiosqlite.OperationalError:
-            # Column already exists
-            pass
 
         # Reset any stale is_running flags from previous sessions
         await conn.execute("UPDATE profiles SET is_running = 0 WHERE is_running = 1")

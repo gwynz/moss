@@ -5,7 +5,15 @@ from services import browser_engine as engine
 
 
 @ft.component
-def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete, on_import_wallet):
+def ProfileCard(
+    profile: dict,
+    model: ProfileManagerModel,
+    on_run,
+    on_stop,
+    on_edit,
+    on_delete,
+    on_import_wallet,
+):
     name = profile.get("name", "Unnamed")
     proxy_type = profile.get("proxy_type", "")
     proxy_host = profile.get("proxy_host", "")
@@ -14,17 +22,19 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     is_running = model.is_running(profile["id"])
     is_starting = model.is_starting(profile["id"])
     ua = profile.get("user_agent", "")
-    browser_type = profile.get("browser_type", "camoufox")
+    tool_type = profile.get("tool_type", "camoufox")
 
     # Status indicator
-    status_indicator = ft.ProgressRing(
-        width=12, height=12, stroke_width=2
-    ) if is_starting else ft.Container(
-        width=10,
-        height=10,
-        border_radius=5,
-        bgcolor=ft.Colors.GREEN if is_running else ft.Colors.GREY_600,
-        tooltip="Running" if is_running else "Stopped",
+    status_indicator = (
+        ft.ProgressRing(width=12, height=12, stroke_width=2)
+        if is_starting
+        else ft.Container(
+            width=10,
+            height=10,
+            border_radius=5,
+            bgcolor=ft.Colors.GREEN if is_running else ft.Colors.GREY_600,
+            tooltip="Running" if is_running else "Stopped",
+        )
     )
 
     # Proxy badge
@@ -42,21 +52,25 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     ua_preview = None
     if ua:
         short_ua = ua[:60] + "..." if len(ua) > 60 else ua
-        ua_preview = ft.Text(
-            short_ua, size=11, color=ft.Colors.GREY_500, max_lines=1)
+        ua_preview = ft.Text(short_ua, size=11, color=ft.Colors.GREY_500, max_lines=1)
 
     # Notes preview
     notes_preview = None
     if notes:
         short_notes = notes[:80] + "..." if len(notes) > 80 else notes
         notes_preview = ft.Text(
-            short_notes, size=11, color=ft.Colors.GREY_500, italic=True, max_lines=1)
+            short_notes, size=11, color=ft.Colors.GREY_500, italic=True, max_lines=1
+        )
 
     # Action buttons
-    can_import_wallet = engine.supports_wallet_import(browser_type)
+    can_import_wallet = engine.supports_wallet_import(tool_type)
 
     run_stop_btn = ft.IconButton(
-        icon=ft.Icons.STOP_CIRCLE_OUTLINED if is_running else ft.Icons.PLAY_CIRCLE_OUTLINED,
+        icon=(
+            ft.Icons.STOP_CIRCLE_OUTLINED
+            if is_running
+            else ft.Icons.PLAY_CIRCLE_OUTLINED
+        ),
         icon_color=ft.Colors.RED if is_running else ft.Colors.GREEN,
         tooltip="Stop" if is_running else "Run",
         on_click=lambda _: on_stop(profile) if is_running else on_run(profile),
@@ -104,9 +118,10 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     }
 
     browser_badge = ft.Container(
-        content=ft.Text(browser_type.upper(), size=9,
-                        color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-        bgcolor=browser_colors.get(browser_type.lower(), ft.Colors.GREY_600),
+        content=ft.Text(
+            tool_type.upper(), size=9, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD
+        ),
+        bgcolor=browser_colors.get(tool_type.lower(), ft.Colors.GREY_600),
         border_radius=4,
         padding=ft.Padding(left=5, top=1, right=5, bottom=1),
     )
@@ -124,8 +139,11 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
     wallet_name = profile.get("wallet_name")
     wallet_address = profile.get("wallet_address")
     if wallet_name or wallet_address:
-        w_display = f"{wallet_name} - {wallet_address}" if wallet_name and wallet_address else (
-            wallet_name or wallet_address)
+        w_display = (
+            f"{wallet_name} - {wallet_address}"
+            if wallet_name and wallet_address
+            else (wallet_name or wallet_address)
+        )
         details.append(
             ft.Text(w_display, size=11, color=ft.Colors.GREY_500, max_lines=1)
         )

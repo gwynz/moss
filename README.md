@@ -38,11 +38,11 @@ Moss supports various browser engines to suit different automation and privacy n
 
 | Tool | Core Engine | Core Tool | Extensions | Proxy | Download Engine |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PyDoll** | Chromium | No | Auto | Auto | Brave |
+| **PyDoll** | Chromium | No | Auto | Auto | Chrome, Brave |
 | **Camoufox** | Firefox | Based Playwright | Auto | Auto | Firefox |
-| **ZenDriver** | Chromium | Based on nodriver | Auto | Manual | Brave |
-| **Playwright** | Chromium | No | Auto | Auto | Brave |
-| **NoDriver** | Chromium | No | Auto | Auto | Brave |
+| **ZenDriver** | Chromium | Based on nodriver | Auto | Auto (Custom Extensions) | Chrome, Brave |
+| **Playwright** | Chromium | No | Auto | Auto | Chrome, Brave |
+| **NoDriver** | Chromium | No | Auto | Auto | Chrome, Brave |
 | **Cloak** | Chromium | Plan | Coming Soon | Coming Soon | Coming Soon |
 
 ### Usage Notes:

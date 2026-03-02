@@ -12,7 +12,7 @@ async def launch(profile: dict, on_close: Callable[[str], Any]) -> Any:
     ext_metamask = profile.get("ext_metamask", False)
     user_data_dir = profile.get("user_data_dir", "")
     if not user_data_dir:
-        user_data_dir = str(DB_DIR / "browser_data" / "camoufox" / profile_id)
+        user_data_dir = str(DB_DIR / "browser_data" / profile_id / "camoufox" / "default")
         Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     proxy_config = None
@@ -69,4 +69,6 @@ async def launch(profile: dict, on_close: Callable[[str], Any]) -> Any:
 
     context.on("close", lambda _ctx: asyncio.ensure_future(
         on_close(profile_id)))
-    return context
+
+    page = context.pages[0] if context.pages else await context.new_page()
+    return context, page

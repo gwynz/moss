@@ -5,15 +5,23 @@ import asyncio
 from contexts.route import RouteContext
 from mosses.profiles.index._profile_proxy import ProxyTest
 from services.engine_utils import (
-    is_brave_installed, download_brave,
-    is_metamask_installed, download_metamask
+    is_browser_installed,
+    download_browser,
+    is_metamask_installed,
+    download_metamask,
 )
 from services.proxy_repo import pick_random_proxy, list_proxies
 from services.wallet_repo import list_wallets
 from services.fingerprint_defaults import (
-    USER_AGENTS, PLATFORMS, LANGUAGES,
-    TIMEZONES, WEBGL_CONFIGS, HARDWARE_CONCURRENCIES, DEVICE_MEMORIES,
-    COLOR_DEPTHS, PIXEL_RATIOS, WEBRTC_POLICIES, generate_random_fingerprint,
+    USER_AGENTS,
+    PLATFORMS,
+    LANGUAGES,
+    TIMEZONES,
+    HARDWARE_CONCURRENCIES,
+    DEVICE_MEMORIES,
+    COLOR_DEPTHS,
+    PIXEL_RATIOS,
+    generate_random_fingerprint,
 )
 
 
@@ -37,7 +45,8 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         defaults["geo_accuracy"] = 100.0
         defaults["media_devices"] = ""
         defaults["ext_metamask"] = False
-        defaults["browser_type"] = "pydoll"
+        defaults["tool_type"] = "pydoll"
+        defaults["browser_engine"] = "chrome"
         defaults["extensions_path"] = ""
         defaults["startup_url"] = "about:blank"
         defaults["cookies"] = "[]"
@@ -62,7 +71,9 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
     ft.on_mounted(fetch_initial_data)
 
     # Browser download state
-    is_browser_ready, set_is_browser_ready = ft.use_state(is_brave_installed())
+    is_browser_ready, set_is_browser_ready = ft.use_state(
+        is_browser_installed(form_data.get("browser_engine", "chrome"))
+    )
     download_progress, set_download_progress = ft.use_state(0.0)
     download_status, set_download_status = ft.use_state("")
     is_downloading, set_is_downloading = ft.use_state(False)
@@ -75,9 +86,11 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data = dict(form_data)
         new_data[key] = value
         set_form_data(new_data)
-        if key == "browser_type":
-            if value in ["pydoll", "zendriver"]:
-                set_is_browser_ready(is_brave_installed())
+        if key in ["tool_type", "browser_engine"]:
+            b_type = new_data.get("tool_type")
+            b_name = new_data.get("browser_engine", "chrome")
+            if b_type in ["pydoll", "zendriver"]:
+                set_is_browser_ready(is_browser_installed(b_name))
             else:
                 set_is_browser_ready(True)
 
@@ -131,9 +144,20 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         new_data["name"] = current_name
         new_data["notes"] = current_notes
         # Preserve proxy/advanced settings
-        for key in ("proxy_type", "proxy_host", "proxy_port", "proxy_username",
-                    "proxy_password", "fonts", "media_devices", "ext_metamask",
-                    "extensions_path", "startup_url", "cookies", "geoip"):
+        for key in (
+            "proxy_type",
+            "proxy_host",
+            "proxy_port",
+            "proxy_username",
+            "proxy_password",
+            "fonts",
+            "media_devices",
+            "ext_metamask",
+            "extensions_path",
+            "startup_url",
+            "cookies",
+            "geoip",
+        ):
             new_data[key] = form_data.get(key, "")
         set_form_data(new_data)
 
@@ -149,7 +173,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
             set_download_progress(val)
 
         try:
-            await download_brave(progress)
+            await download_browser(form_data.get("browser_engine", "chrome"), progress)
             set_is_browser_ready(True)
         except Exception as ex:
             set_download_status(f"Error: {str(ex)}")
@@ -194,8 +218,9 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         return ft.TextField(
             label=label,
             value=str(val) if val is not None else "",
-            on_change=lambda e: update_field(key, _parse_num(
-                e.control.value, type(val) if val is not None else int)),
+            on_change=lambda e: update_field(
+                key, _parse_num(e.control.value, type(val) if val is not None else int)
+            ),
             text_size=13,
             keyboard_type=ft.KeyboardType.NUMBER,
             **kwargs,
@@ -225,44 +250,71 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
 
     # === Tab 1: Profile ===
     download_section = ft.Container()
-    if not is_browser_ready and form_data.get("browser_type") in ["pydoll", "zendriver"]:
+    cur_b_name = form_data.get("browser_engine", "chrome")
+    display_b_name = cur_b_name.capitalize()
+
+    if not is_browser_ready and form_data.get("tool_type") in [
+        "pydoll",
+        "zendriver",
+    ]:
         download_section = ft.Container(
-            content=ft.Column([
-                ft.Row([
-                    ft.Icon(ft.Icons.WARNING_ROUNDED,
-                            color=ft.Colors.ORANGE_700),
-                    ft.Text("Brave Browser Required",
-                            color=ft.Colors.ORANGE_700, weight=ft.FontWeight.BOLD),
-                ]),
-                ft.Text(
-                    "A local Brave browser is required for Pydoll/Zendriver.", size=12),
-                ft.Row([
-                    ft.FilledButton(
-                        "Download Brave",
-                        icon=ft.Icons.DOWNLOAD,
-                        on_click=on_download_click,
-                        disabled=is_downloading
+            content=ft.Column(
+                [
+                    ft.Row(
+                        [
+                            ft.Icon(
+                                ft.Icons.WARNING_ROUNDED, color=ft.Colors.ORANGE_700
+                            ),
+                            ft.Text(
+                                f"{display_b_name} Browser Required",
+                                color=ft.Colors.ORANGE_700,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                        ]
                     ),
-                    ft.Text(download_status, size=11, italic=True)
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.ProgressBar(
-                    value=download_progress, width=400) if is_downloading or download_progress > 0 else ft.Container()
-            ], spacing=8),
+                    ft.Text(
+                        f"A local {display_b_name} browser is required for Pydoll/Zendriver.",
+                        size=12,
+                    ),
+                    ft.Row(
+                        [
+                            ft.FilledButton(
+                                f"Download {display_b_name}",
+                                icon=ft.Icons.DOWNLOAD,
+                                on_click=on_download_click,
+                                disabled=is_downloading,
+                            ),
+                            ft.Text(download_status, size=11, italic=True),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    (
+                        ft.ProgressBar(value=download_progress, width=400)
+                        if is_downloading or download_progress > 0
+                        else ft.Container()
+                    ),
+                ],
+                spacing=8,
+            ),
             padding=12,
             bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.ORANGE_100),
             border_radius=8,
-            border=ft.Border(bottom=ft.BorderSide(1, ft.Colors.ORANGE_200))
+            border=ft.Border(bottom=ft.BorderSide(1, ft.Colors.ORANGE_200)),
         )
-    elif is_browser_ready and form_data.get("browser_type") in ["pydoll", "zendriver"]:
+    elif is_browser_ready and form_data.get("tool_type") in ["pydoll", "zendriver"]:
         download_section = ft.Container(
-            content=ft.Row([
-                ft.Icon(ft.Icons.CHECK_CIRCLE,
-                        color=ft.Colors.GREEN_700, size=20),
-                ft.Text("Brave browser ready",
-                        color=ft.Colors.GREEN_700, size=12),
-                ft.FilledButton(
-                    "Download", icon=ft.Icons.DOWNLOAD, disabled=True)
-            ], spacing=10),
+            content=ft.Row(
+                [
+                    ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_700, size=20),
+                    ft.Text(
+                        f"{display_b_name} browser ready",
+                        color=ft.Colors.GREEN_700,
+                        size=12,
+                    ),
+                    ft.FilledButton("Download", icon=ft.Icons.DOWNLOAD, disabled=True),
+                ],
+                spacing=10,
+            ),
             padding=8,
             bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.GREEN_100),
             border_radius=8,
@@ -270,26 +322,48 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
 
     profile_controls: list[ft.Control] = [
         text_field("Profile Name *", "name"),
-        dropdown_field("Browser Engine", "browser_type", [
-                       "camoufox", "zendriver", "pydoll"]),
+        ft.Row(
+            [
+                dropdown_field(
+                    "Browser Engine",
+                    "tool_type",
+                    ["camoufox", "zendriver", "pydoll"],
+                    expand=True,
+                ),
+                dropdown_field(
+                    "Browser",
+                    "browser_engine",
+                    ["chrome", "brave"],
+                    visible=form_data.get("tool_type") in ["pydoll", "zendriver"],
+                    expand=True,
+                ),
+            ]
+        ),
         download_section,
-        ft.Row([
-            ft.Dropdown(
-                label="Wallet",
-                value=str(form_data.get("wallet_id", "") or ""),
-                options=[ft.DropdownOption(key=str(w["id"]), text=f"{w['public_address']} - {w["name"]} {w['note']}")
-                         for w in wallets],
-                on_select=lambda e: update_field("wallet_id", e.control.value),
-                text_size=13,
-                editable=True,
-                expand=True,
-            ),
-            ft.TextButton(
-                "Manage Wallet",
-                icon=ft.Icons.OPEN_IN_NEW,
-                on_click=lambda _: route_ctx.navigate("/wallets/index"),
-            ),
-        ]),
+        ft.Row(
+            [
+                ft.Dropdown(
+                    label="Wallet",
+                    value=str(form_data.get("wallet_id", "") or ""),
+                    options=[
+                        ft.DropdownOption(
+                            key=str(w["id"]),
+                            text=f"{w['public_address']} - {w["name"]} {w['note']}",
+                        )
+                        for w in wallets
+                    ],
+                    on_select=lambda e: update_field("wallet_id", e.control.value),
+                    text_size=13,
+                    editable=True,
+                    expand=True,
+                ),
+                ft.TextButton(
+                    "Manage Wallet",
+                    icon=ft.Icons.OPEN_IN_NEW,
+                    on_click=lambda _: route_ctx.navigate("/wallets/index"),
+                ),
+            ]
+        ),
         text_field("Notes", "notes", multiline=True, min_lines=2, max_lines=4),
     ]
 
@@ -315,26 +389,32 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         number_field("Accuracy (meters)", "geo_accuracy", disabled=True),
         ft.Divider(),
         ft.Text("Cookies", size=14, weight=ft.FontWeight.W_500),
-        text_field("Cookies JSON (import/export)", "cookies",
-                   multiline=True, min_lines=4, max_lines=10, disabled=True),
+        text_field(
+            "Cookies JSON (import/export)",
+            "cookies",
+            multiline=True,
+            min_lines=4,
+            max_lines=10,
+            disabled=True,
+        ),
     ]
 
     # === Tab 3: Display ===
     display_controls: list[ft.Control] = [
         number_field("Screen Width", "screen_width", disabled=True),
         number_field("Screen Height", "screen_height", disabled=True),
-        dropdown_field("Color Depth", "color_depth",
-                       COLOR_DEPTHS, disabled=True),
-        dropdown_field("Pixel Ratio", "pixel_ratio",
-                       PIXEL_RATIOS, disabled=True),
+        dropdown_field("Color Depth", "color_depth", COLOR_DEPTHS, disabled=True),
+        dropdown_field("Pixel Ratio", "pixel_ratio", PIXEL_RATIOS, disabled=True),
     ]
 
     # === Tab 4: Hardware ===
     hardware_controls: list[ft.Control] = [
-        dropdown_field("CPU Cores", "hardware_concurrency",
-                       HARDWARE_CONCURRENCIES, disabled=True),
-        dropdown_field("Device Memory (GB)", "device_memory",
-                       DEVICE_MEMORIES, disabled=True),
+        dropdown_field(
+            "CPU Cores", "hardware_concurrency", HARDWARE_CONCURRENCIES, disabled=True
+        ),
+        dropdown_field(
+            "Device Memory (GB)", "device_memory", DEVICE_MEMORIES, disabled=True
+        ),
         ft.Divider(),
         ft.Text("WebGL", size=14, weight=ft.FontWeight.W_500),
         text_field("WebGL Vendor", "webgl_vendor", disabled=True),
@@ -342,73 +422,98 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         ft.Divider(),
         ft.Text("Canvas Fingerprint", size=14, weight=ft.FontWeight.W_500),
         ft.Slider(
-            min=0, max=0.1,
+            min=0,
+            max=0.1,
             value=float(form_data.get("canvas_noise", 0)),
             divisions=100,
             label="{value}",
             disabled=True,
             on_change=lambda e: update_field(
-                "canvas_noise", round(e.control.value or 0.0, 4)),
+                "canvas_noise", round(e.control.value or 0.0, 4)
+            ),
         ),
-        ft.Text(f"Canvas noise: {form_data.get('canvas_noise', 0)}",
-                size=12, color=ft.Colors.GREY_500),
+        ft.Text(
+            f"Canvas noise: {form_data.get('canvas_noise', 0)}",
+            size=12,
+            color=ft.Colors.GREY_500,
+        ),
         ft.Divider(),
         ft.Text("Audio Fingerprint", size=14, weight=ft.FontWeight.W_500),
         ft.Slider(
-            min=0, max=0.05,
+            min=0,
+            max=0.05,
             value=float(form_data.get("audio_noise", 0)),
             divisions=100,
             label="{value}",
             disabled=True,
             on_change=lambda e: update_field(
-                "audio_noise", round(e.control.value or 0.0, 4)),
+                "audio_noise", round(e.control.value or 0.0, 4)
+            ),
         ),
-        ft.Text(f"Audio noise: {form_data.get('audio_noise', 0)}",
-                size=12, color=ft.Colors.GREY_500),
+        ft.Text(
+            f"Audio noise: {form_data.get('audio_noise', 0)}",
+            size=12,
+            color=ft.Colors.GREY_500,
+        ),
     ]
 
     # === Tab 5: Network ===
     # Find if current form host/port matches a saved proxy to keep dropdown selected
     current_proxy_id = next(
-        (str(p["id"]) for p in proxies if
-         p.get("proxy_host") == form_data.get("proxy_host") and
-         str(p.get("proxy_port")) == str(form_data.get("proxy_port"))),
-        None
+        (
+            str(p["id"])
+            for p in proxies
+            if p.get("proxy_host") == form_data.get("proxy_host")
+            and str(p.get("proxy_port")) == str(form_data.get("proxy_port"))
+        ),
+        None,
     )
 
     network_controls: list[ft.Control] = [
-        ft.Row([
-            ft.Dropdown(
-                label="Select Proxy",
-                options=[
-                    ft.DropdownOption(
-                        key=str(p["id"]),
-                        text=f"{p['name']} ({p.get('proxy_host')}:{p.get('proxy_port')})" if p.get(
-                            "name") else f"{p.get('proxy_host')}:{p.get('proxy_port')}"
-                    ) for p in proxies
-                ],
-                on_select=on_proxy_select,
-                value=current_proxy_id,
-                text_size=13,
-                expand=True,
-            ),
-            ft.TextButton(
-                "Random Pick",
-                icon=ft.Icons.SHUFFLE,
-                on_click=on_random_proxy,
-            ),
-            ft.TextButton(
-                "Manage Proxy",
-                icon=ft.Icons.OPEN_IN_NEW,
-                on_click=lambda _: route_ctx.navigate("/proxies/index"),
-            ),
-        ]),
+        ft.Row(
+            [
+                ft.Dropdown(
+                    label="Select Proxy",
+                    options=[
+                        ft.DropdownOption(
+                            key=str(p["id"]),
+                            text=(
+                                f"{p['name']} ({p.get('proxy_host')}:{p.get('proxy_port')})"
+                                if p.get("name")
+                                else f"{p.get('proxy_host')}:{p.get('proxy_port')}"
+                            ),
+                        )
+                        for p in proxies
+                    ],
+                    on_select=on_proxy_select,
+                    value=current_proxy_id,
+                    text_size=13,
+                    expand=True,
+                ),
+                ft.TextButton(
+                    "Random Pick",
+                    icon=ft.Icons.SHUFFLE,
+                    on_click=on_random_proxy,
+                ),
+                ft.TextButton(
+                    "Manage Proxy",
+                    icon=ft.Icons.OPEN_IN_NEW,
+                    on_click=lambda _: route_ctx.navigate("/proxies/index"),
+                ),
+            ]
+        ),
         ft.Divider(),
         ft.TextField(
             label="Shortcut (host:port:user:pass)",
             on_change=on_quick_add,
-            value=f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}" if form_data.get(
-                "proxy_host", "") and form_data.get("proxy_port", 0) and form_data.get("proxy_username", "") and form_data.get("proxy_password", "") else "",
+            value=(
+                f"{form_data.get('proxy_host', '')}:{form_data.get('proxy_port', 0)}:{form_data.get('proxy_username', '')}:{form_data.get('proxy_password', '')}"
+                if form_data.get("proxy_host", "")
+                and form_data.get("proxy_port", 0)
+                and form_data.get("proxy_username", "")
+                and form_data.get("proxy_password", "")
+                else ""
+            ),
             text_size=13,
             hint_text="example.com:8080:username:password",
             expand=True,
@@ -418,8 +523,9 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         text_field("Proxy Host", "proxy_host"),
         number_field("Proxy Port", "proxy_port"),
         text_field("Proxy Username", "proxy_username"),
-        text_field("Proxy Password", "proxy_password",
-                   password=True, can_reveal_password=True),
+        text_field(
+            "Proxy Password", "proxy_password", password=True, can_reveal_password=True
+        ),
         ProxyTest(
             proxy_type=form_data.get("proxy_type", ""),
             proxy_host=form_data.get("proxy_host", ""),
@@ -434,24 +540,32 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         text_field("Startup URL", "startup_url"),
         ft.Divider(),
         ft.Text("Standard Extensions", size=14, weight=ft.FontWeight.W_500),
-        ft.Row([
-            ft.Checkbox(
-                label="MetaMask",
-                value=bool(form_data.get("ext_metamask", False)),
-                on_change=lambda e: update_field(
-                    "ext_metamask", e.control.value),
-            ),
-            ft.FilledButton(
-                "Download Extension" if not is_mm_ready else "Extension Ready",
-                icon=ft.Icons.DOWNLOAD if not is_mm_ready else ft.Icons.CHECK_CIRCLE,
-                on_click=on_download_mm,
-                disabled=is_mm_ready or is_downloading,
-                visible=bool(form_data.get("ext_metamask", False)),
-                height=35,
-            ),
-            ft.Text(mm_status, size=11, italic=True,
-                    color=ft.Colors.GREY_500) if mm_status else ft.Container(),
-        ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+        ft.Row(
+            [
+                ft.Checkbox(
+                    label="MetaMask",
+                    value=bool(form_data.get("ext_metamask", False)),
+                    on_change=lambda e: update_field("ext_metamask", e.control.value),
+                ),
+                ft.FilledButton(
+                    "Download Extension" if not is_mm_ready else "Extension Ready",
+                    icon=(
+                        ft.Icons.DOWNLOAD if not is_mm_ready else ft.Icons.CHECK_CIRCLE
+                    ),
+                    on_click=on_download_mm,
+                    disabled=is_mm_ready or is_downloading,
+                    visible=bool(form_data.get("ext_metamask", False)),
+                    height=35,
+                ),
+                (
+                    ft.Text(mm_status, size=11, italic=True, color=ft.Colors.GREY_500)
+                    if mm_status
+                    else ft.Container()
+                ),
+            ],
+            spacing=10,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
         ft.Divider(),
         ft.Text("Custom Extensions", size=14, weight=ft.FontWeight.W_500),
         text_field("Extensions Path (unpacked)", "extensions_path"),
@@ -480,8 +594,7 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
                 "Save",
                 icon=ft.Icons.SAVE,
                 on_click=do_save,
-                disabled=not form_data.get(
-                    "name", "").strip() or not is_browser_ready,
+                disabled=not form_data.get("name", "").strip() or not is_browser_ready,
             ),
         ],
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -502,14 +615,18 @@ def ProfileForm(profile: dict, is_edit: bool, on_save, on_cancel):
         tab_headers.append(ft.Tab(label="Hardware", icon=ft.Icons.MEMORY))
         tab_views.append(tab_content(hardware_controls))
 
-    tab_headers.extend([
-        ft.Tab(label="Network", icon=ft.Icons.WIFI),
-        ft.Tab(label="Advanced", icon=ft.Icons.TUNE),
-    ])
-    tab_views.extend([
-        tab_content(network_controls),
-        tab_content(advanced_controls),
-    ])
+    tab_headers.extend(
+        [
+            ft.Tab(label="Network", icon=ft.Icons.WIFI),
+            ft.Tab(label="Advanced", icon=ft.Icons.TUNE),
+        ]
+    )
+    tab_views.extend(
+        [
+            tab_content(network_controls),
+            tab_content(advanced_controls),
+        ]
+    )
 
     return ft.Column(
         [
