@@ -40,10 +40,12 @@ def Moss(moss: MossItem):
                 key=moss.file_name,
                 content=moss.moss(),
                 clip_behavior=ft.ClipBehavior.NONE,
+                expand=True,
             )
             if moss.moss
             else ft.Text("No moss available"),
         ],
+        expand=True,
     )
 
 

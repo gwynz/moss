@@ -12,7 +12,6 @@ def ProfileCard(
     on_stop,
     on_edit,
     on_delete,
-    on_import_wallet,
 ):
     name = profile.get("name", "Unnamed")
     proxy_type = profile.get("proxy_type", "")
@@ -63,7 +62,7 @@ def ProfileCard(
         )
 
     # Action buttons
-    can_import_wallet = engine.supports_wallet_import(tool_type)
+    # can_import_wallet = engine.supports_wallet_import(tool_type)
 
     run_stop_btn = ft.IconButton(
         icon=(
@@ -95,19 +94,8 @@ def ProfileCard(
         disabled=is_running or is_starting,
     )
 
-    wallet_btn = ft.IconButton(
-        icon=ft.Icons.ACCOUNT_BALANCE_WALLET_OUTLINED,
-        tooltip="Import MetaMask Wallet",
-        on_click=lambda _: on_import_wallet(profile),
-        icon_size=20,
-        disabled=is_running or is_starting,
-    )
-
     # Action buttons list
-    actions = [run_stop_btn]
-    if can_import_wallet:
-        actions.append(wallet_btn)
-    actions.extend([edit_btn, delete_btn])
+    actions = [run_stop_btn, edit_btn, delete_btn]
 
     # Browser badge
     browser_colors = {

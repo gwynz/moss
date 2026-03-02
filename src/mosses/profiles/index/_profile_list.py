@@ -12,7 +12,7 @@ from services import profile_repo
 
 
 @ft.component
-def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete, on_import_wallet):
+def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete):
     # Use local state for the input field text
     search_val, set_search_val = ft.use_state(model.search_query)
 
@@ -205,7 +205,6 @@ def ProfileList(model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete,
             on_stop=on_stop,
             on_edit=on_edit,
             on_delete=on_delete,
-            on_import_wallet=on_import_wallet,
         )
         for p in profiles
     ]

@@ -70,60 +70,6 @@ def ProfileManager():
         except Exception as e:
             model.error_message = f"Stop failed: {e}"
 
-    async def on_import_wallet(profile):
-        pid = profile["id"]
-        if model.is_starting(pid) or model.is_running(pid):
-            return
-        model.set_starting(pid, True)
-        try:
-            fresh = await repo.get_profile(pid)
-            if not fresh:
-                return
-
-            w_id = fresh.get("wallet_id")
-            if not w_id:
-                model.error_message = "No wallet linked to this profile. Please edit profile to link a wallet."
-                return
-
-            wallet = await wallet_repo.get_wallet(w_id, decrypt_seed=True)
-
-            print(wallet)
-            if not wallet or not wallet.get("seed"):
-                model.error_message = "Linked wallet not found or seed is empty."
-                return
-
-            # Force Pydoll for automation
-            fresh["tool_type"] = "pydoll"
-            fresh["ext_metamask"] = True
-
-            # Launch and get browser
-            from services import pydoll_engine
-            from utils.crypto import decrypt_string
-
-            context, tab = await pydoll_engine.launch(fresh)
-            print("Browser:", context)
-            if context:
-                # Register in running contexts so it can be closed normally
-                engine._running_contexts[pid] = context
-                await repo.set_running(pid, True)
-                model.set_running(pid, True)
-
-                # Get stored password or use default
-                mm_pass_enc = fresh.get("metamask_password")
-                mm_pass = decrypt_string(mm_pass_enc) if mm_pass_enc else "Password123!"
-
-                # Run the automation
-                await pydoll_engine.import_metamask_wallet(
-                    tab,
-                    seed_phrase=wallet["seed"],
-                    password=mm_pass,
-                )
-        except Exception as e:
-            model.error_message = f"Wallet import failed: {e}"
-        finally:
-            model.set_starting(pid, False)
-            await refresh_profiles()
-
     def on_edit(profile):
         model.start_edit(profile)
 
@@ -222,7 +168,6 @@ def ProfileManager():
                 on_stop=lambda p: asyncio.create_task(on_stop(p)),
                 on_edit=on_edit,
                 on_delete=on_delete_request,
-                on_import_wallet=lambda p: asyncio.create_task(on_import_wallet(p)),
             )
         )
     else:

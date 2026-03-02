@@ -62,7 +62,12 @@ class Moss:
                 icon=ft.Icons.WALLET,
                 selected_icon=ft.Icons.WALLET_SHARP,
             ),
-
+            ControlGroup(
+                name="tasks",
+                label="Tasks",
+                icon=ft.Icons.TASK_ALT,
+                selected_icon=ft.Icons.TASK_ALT_SHARP,
+            ),
             # ControlGroup(
             #     name="layout",
             #     label="Layout",
@@ -141,8 +146,7 @@ class Moss:
     _INDEX_FILE_NAME: ClassVar[str] = "index.py"
 
     def __post_init__(self):
-        self._mosses_root = Path(
-            __file__).resolve().parent.parent / "mosses"
+        self._mosses_root = Path(__file__).resolve().parent.parent / "mosses"
         self.import_modules()
 
     def get_control_group(self, group_name: str) -> ControlGroup | None:
@@ -164,9 +168,7 @@ class Moss:
             if entry.is_dir() and entry.name not in self._IGNORED_ENTRIES
         )
 
-    def list_moss_files(
-        self, control_group_dir: str, control_dir: str
-    ) -> list[Path]:
+    def list_moss_files(self, control_group_dir: str, control_dir: str) -> list[Path]:
         base_path = self._mosses_root / control_group_dir / control_dir
         if not base_path.exists():
             return []
@@ -180,15 +182,12 @@ class Moss:
         for control_group in self.control_groups:
             control_group.controls.clear()
             for control_dir in self.list_control_dirs(control_group.name):
-                grid_item = self._build_grid_item(
-                    control_group.name, control_dir)
+                grid_item = self._build_grid_item(control_group.name, control_dir)
                 control_group.controls.append(grid_item)
-            control_group.controls.sort(
-                key=lambda item: (item.name or item.id).lower())
+            control_group.controls.sort(key=lambda item: (item.name or item.id).lower())
 
     def _build_grid_item(self, group_name: str, control_dir: str) -> ControlItem:
-        grid_item = ControlItem(
-            id=f"{group_name}_{control_dir}", name=control_dir)
+        grid_item = ControlItem(id=f"{group_name}_{control_dir}", name=control_dir)
         for file_path in self.list_moss_files(group_name, control_dir):
             module = self._import_module(file_path)
             if file_path.name == self._INDEX_FILE_NAME:
@@ -198,8 +197,7 @@ class Moss:
 
             moss_item = MossItem(
                 name=getattr(module, "name", file_path.stem),
-                file_name=str(file_path.relative_to(
-                    self._mosses_root).as_posix()),
+                file_name=str(file_path.relative_to(self._mosses_root).as_posix()),
                 order=self._parse_moss_order(file_path.name),
                 moss=getattr(module, "moss", None),
             )
