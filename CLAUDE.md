@@ -72,7 +72,7 @@ Routes follow the pattern `/<group>/<control>`, e.g. `/buttons/button`. The `Rou
 
 1. Create `src/mosses/<group>/<control>/` (group must match a `ControlGroup.name` in `src/models/moss.py`).
 2. Add `index.py` with module-level `name: str` and optional `description: str`.
-3. Add numbered moss files like `01_my_moss.py`. Each must export:
+3. Add moss view like `my_moss_view.py`. It must export:
    - `name: str` — display name
    - `moss()` — callable returning a `ft.Control`
 

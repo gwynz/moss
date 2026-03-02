@@ -70,71 +70,71 @@ def create_full_stealth_options():
     """Complete stealth configuration combining arguments and preferences."""
     options = ChromiumOptions()
 
-    # WebRTC IP leak prevention
-    options.webrtc_leak_protection = True
+    # # WebRTC IP leak prevention
+    # options.webrtc_leak_protection = True
 
-    # Core stealth
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+    # # Core stealth
+    # options.add_argument("--disable-blink-features=AutomationControlled")
+    # options.add_argument("--disable-features=IsolateOrigins,site-per-process")
 
-    # User agent (use a recent, common one)
-    options.add_argument(
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-    )
+    # # User agent (use a recent, common one)
+    # options.add_argument(
+    #     "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+    # )
 
-    # Language and locale
-    options.add_argument("--lang=en-US")
-    options.add_argument("--accept-lang=en-US,en;q=0.9")
+    # # Language and locale
+    # options.add_argument("--lang=en-US")
+    # options.add_argument("--accept-lang=en-US,en;q=0.9")
 
-    # WebGL (software renderer to avoid unique GPU signatures)
-    options.add_argument("--use-gl=swiftshader")
-    options.add_argument("--disable-features=WebGLDraftExtensions")
+    # # WebGL (software renderer to avoid unique GPU signatures)
+    # options.add_argument("--use-gl=swiftshader")
+    # options.add_argument("--disable-features=WebGLDraftExtensions")
 
-    # ===== Browser Preferences =====
-    options.browser_preferences = {
-        # Realistic homepage
-        "homepage": "https://www.google.com",
-        "session": {
-            "restore_on_startup": 1,
-            "startup_urls": ["https://www.google.com"],
-        },
-        # Enable features real users have
-        "safebrowsing": {"enabled": True},
-        "autofill": {"enabled": True},
-        "search": {"suggest_enabled": True},
-        "dns_prefetching": {"enabled": True},
-        # Privacy
-        "enable_do_not_track": False,  # Most users don't enable this
-        "enable_referrers": False,
-        # Safe Browsing
-        "safebrowsing": {
-            "enabled": False,  # Disable Safe Browsing
-            "enhanced": False,  # Disable enhanced protection
-        },
-        # Privacy Sandbox (Google's cookie replacement)
-        "privacy_sandbox": {
-            "apis_enabled": False,
-            "topics_enabled": False,
-            "fledge_enabled": False,
-        },
-        # Third-party cookies
-        "profile": {
-            "block_third_party_cookies": True,
-            "cookie_controls_mode": 1,  # Block third-party in incognito
-            # Content settings
-            "default_content_setting_values": {
-                "cookies": 1,
-                "third_party_cookie_blocking_enabled": True,
-            },
-        },
-        # WebRTC (can leak real IP)
-        "webrtc": {
-            "ip_handling_policy": "disable_non_proxied_udp",
-            "multiple_routes_enabled": False,
-            "nonproxied_udp_enabled": False,
-            "allow_legacy_tls_protocols": False,
-        },
-    }
+    # # ===== Browser Preferences =====
+    # options.browser_preferences = {
+    #     # Realistic homepage
+    #     "homepage": "https://www.google.com",
+    #     "session": {
+    #         "restore_on_startup": 1,
+    #         "startup_urls": ["https://www.google.com"],
+    #     },
+    #     # Enable features real users have
+    #     "safebrowsing": {"enabled": True},
+    #     "autofill": {"enabled": True},
+    #     "search": {"suggest_enabled": True},
+    #     "dns_prefetching": {"enabled": True},
+    #     # Privacy
+    #     "enable_do_not_track": False,  # Most users don't enable this
+    #     "enable_referrers": False,
+    #     # Safe Browsing
+    #     "safebrowsing": {
+    #         "enabled": False,  # Disable Safe Browsing
+    #         "enhanced": False,  # Disable enhanced protection
+    #     },
+    #     # Privacy Sandbox (Google's cookie replacement)
+    #     "privacy_sandbox": {
+    #         "apis_enabled": False,
+    #         "topics_enabled": False,
+    #         "fledge_enabled": False,
+    #     },
+    #     # Third-party cookies
+    #     "profile": {
+    #         "block_third_party_cookies": True,
+    #         "cookie_controls_mode": 1,  # Block third-party in incognito
+    #         # Content settings
+    #         "default_content_setting_values": {
+    #             "cookies": 1,
+    #             "third_party_cookie_blocking_enabled": True,
+    #         },
+    #     },
+    #     # WebRTC (can leak real IP)
+    #     "webrtc": {
+    #         "ip_handling_policy": "disable_non_proxied_udp",
+    #         "multiple_routes_enabled": False,
+    #         "nonproxied_udp_enabled": False,
+    #         "allow_legacy_tls_protocols": False,
+    #     },
+    # }
 
     return options
 

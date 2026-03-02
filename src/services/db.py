@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS profiles (
     user_data_dir TEXT NOT NULL DEFAULT '',
     is_running INTEGER NOT NULL DEFAULT 0,
     wallet_id TEXT,
-    metamask_password TEXT NOT NULL DEFAULT ''
+    metamask_password TEXT NOT NULL DEFAULT '',
+    task_note TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS proxies (
@@ -121,6 +122,16 @@ async def init_db() -> None:
             print("Migrating database: Adding metamask_password column...")
             await conn.execute(
                 "ALTER TABLE profiles ADD COLUMN metamask_password TEXT NOT NULL DEFAULT ''"
+            )
+            await conn.commit()
+
+        # Migration: Add task_note if it doesn't exist
+        try:
+            await conn.execute("SELECT task_note FROM profiles LIMIT 1")
+        except sqlite3.OperationalError:
+            print("Migrating database: Adding task_note column...")
+            await conn.execute(
+                "ALTER TABLE profiles ADD COLUMN task_note TEXT NOT NULL DEFAULT ''"
             )
             await conn.commit()
 

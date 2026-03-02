@@ -42,6 +42,7 @@ _MUTABLE_COLUMNS = [
     "is_running",
     "wallet_id",
     "metamask_password",
+    "task_note",
 ]
 
 _ALL_COLUMNS = [
@@ -84,6 +85,7 @@ _ALL_COLUMNS = [
     "is_running",
     "wallet_id",
     "metamask_password",
+    "task_note",
 ]
 
 
