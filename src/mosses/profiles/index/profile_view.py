@@ -6,8 +6,11 @@ from models.profile_model import ProfileManagerModel
 from services.db import init_db
 from services import profile_repo as repo
 from services import browser_engine as engine
+from services import wallet_repo
+from services import pydoll_engine
 from mosses.profiles.index._profile_list import ProfileList
 from mosses.profiles.index._profile_form import ProfileForm
+
 name = "Profile Manager"
 
 
@@ -18,8 +21,7 @@ def moss():
 @ft.component
 def ProfileManager():
     model, set_model = ft.use_state(ProfileManagerModel())
-    confirm_delete, set_confirm_delete = ft.use_state(
-        None)  # profile dict or None
+    confirm_delete, set_confirm_delete = ft.use_state(None)  # profile dict or None
 
     async def startup():
         try:
@@ -67,6 +69,55 @@ def ProfileManager():
             await refresh_profiles()
         except Exception as e:
             model.error_message = f"Stop failed: {e}"
+
+    async def on_import_wallet(profile):
+        pid = profile["id"]
+        if model.is_starting(pid) or model.is_running(pid):
+            return
+        model.set_starting(pid, True)
+        try:
+            fresh = await repo.get_profile(pid)
+            if not fresh:
+                return
+
+            w_id = fresh.get("wallet_id")
+            if not w_id:
+                model.error_message = "No wallet linked to this profile. Please edit profile to link a wallet."
+                return
+
+            wallet = await wallet_repo.get_wallet(w_id, decrypt_seed=True)
+
+            print(wallet)
+            if not wallet or not wallet.get("seed"):
+                model.error_message = "Linked wallet not found or seed is empty."
+                return
+
+            # Force Pydoll for automation
+            fresh["browser_type"] = "pydoll"
+            fresh["ext_metamask"] = True
+
+            # Launch and get browser
+            from services import pydoll_engine
+
+            context, tab = await pydoll_engine.launch(fresh)
+            print("Browser:", context)
+            if context:
+                # Register in running contexts so it can be closed normally
+                engine._running_contexts[pid] = context
+                await repo.set_running(pid, True)
+                model.set_running(pid, True)
+
+                # Run the automation
+                await pydoll_engine.import_metamask_wallet(
+                    tab,
+                    seed_phrase=wallet["seed"],
+                    password="Password123!",  # Hardcoded as base in test.metamask.py
+                )
+        except Exception as e:
+            model.error_message = f"Wallet import failed: {e}"
+        finally:
+            model.set_starting(pid, False)
+            await refresh_profiles()
 
     def on_edit(profile):
         model.start_edit(profile)
@@ -128,14 +179,12 @@ def ProfileManager():
         modal=True,
         title=ft.Text("Delete Profile"),
         open=True if confirm_delete else False,
-        content=ft.Text(
-            f'Delete tis profile"? This cannot be undone.'),
+        content=ft.Text(f'Delete tis profile"? This cannot be undone.'),
         actions=[
             ft.TextButton("Cancel", on_click=on_delete_cancel),
             ft.FilledButton(
                 "Delete",
-                on_click=lambda e: asyncio.create_task(
-                    on_delete_confirm(e)),
+                on_click=lambda e: asyncio.create_task(on_delete_confirm(e)),
                 style=ft.ButtonStyle(bgcolor=ft.Colors.RED),
             ),
         ],
@@ -146,6 +195,8 @@ def ProfileManager():
 
     def dismiss_error(_):
         model.error_message = ""
+        set_model(model)
+        ft.context.page.update()
 
     error_banner = ft.Banner(
         open=True if model.error_message else False,
@@ -166,6 +217,7 @@ def ProfileManager():
                 on_stop=lambda p: asyncio.create_task(on_stop(p)),
                 on_edit=on_edit,
                 on_delete=on_delete_request,
+                on_import_wallet=lambda p: asyncio.create_task(on_import_wallet(p)),
             )
         )
     else:

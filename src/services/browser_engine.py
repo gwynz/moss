@@ -79,6 +79,17 @@ async def close_profile(profile_id: str) -> bool:
 def is_running(profile_id: str) -> bool:
     return profile_id in _running_contexts
 
+def supports_wallet_import(browser_type: str) -> bool:
+    """Checks if the engine for the given browser type supports MetaMask import."""
+    engines = {
+        "camoufox": camoufox_engine,
+        "pydoll": pydoll_engine,
+        "zendriver": zendriver_engine,
+        "cloakbrowser": cloak_engine,
+    }
+    engine_mod = engines.get(browser_type.lower())
+    return hasattr(engine_mod, "import_metamask_wallet")
+
 async def export_cookies(profile_id: str) -> str | None:
     import json
     context = _running_contexts.get(profile_id)

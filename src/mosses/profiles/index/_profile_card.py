@@ -1,10 +1,11 @@
 import flet as ft
 
 from models.profile_model import ProfileManagerModel
+from services import browser_engine as engine
 
 
 @ft.component
-def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete):
+def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_edit, on_delete, on_import_wallet):
     name = profile.get("name", "Unnamed")
     proxy_type = profile.get("proxy_type", "")
     proxy_host = profile.get("proxy_host", "")
@@ -52,6 +53,8 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
             short_notes, size=11, color=ft.Colors.GREY_500, italic=True, max_lines=1)
 
     # Action buttons
+    can_import_wallet = engine.supports_wallet_import(browser_type)
+
     run_stop_btn = ft.IconButton(
         icon=ft.Icons.STOP_CIRCLE_OUTLINED if is_running else ft.Icons.PLAY_CIRCLE_OUTLINED,
         icon_color=ft.Colors.RED if is_running else ft.Colors.GREEN,
@@ -77,6 +80,20 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
         icon_size=20,
         disabled=is_running or is_starting,
     )
+
+    wallet_btn = ft.IconButton(
+        icon=ft.Icons.ACCOUNT_BALANCE_WALLET_OUTLINED,
+        tooltip="Import MetaMask Wallet",
+        on_click=lambda _: on_import_wallet(profile),
+        icon_size=20,
+        disabled=is_running or is_starting,
+    )
+
+    # Action buttons list
+    actions = [run_stop_btn]
+    if can_import_wallet:
+        actions.append(wallet_btn)
+    actions.extend([edit_btn, delete_btn])
 
     # Browser badge
     browser_colors = {
@@ -127,7 +144,7 @@ def ProfileCard(profile: dict, model: ProfileManagerModel, on_run, on_stop, on_e
             expand=True,
         ),
         ft.Row(
-            [run_stop_btn, edit_btn, delete_btn],
+            actions,
             spacing=0,
         ),
     ]

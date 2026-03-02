@@ -81,6 +81,7 @@ async def download_brave(progress_callback=None):
 EXTENSIONS_DIR = DB_DIR / "extensions"
 METAMASK_CHROME_DIR = EXTENSIONS_DIR / "chrome" / "metamask"
 METAMASK_FIREFOX_DIR = EXTENSIONS_DIR / "firefox" / "metamask"
+METAMASK_ID = "ipkfmedcjidoidhklihaemaelnomcglo"
 
 def is_metamask_installed() -> bool:
     """Checks if both Chrome and Firefox MetaMask extensions are downloaded and extracted."""

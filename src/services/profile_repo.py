@@ -114,11 +114,16 @@ async def update_profile(profile_id: str, **kwargs) -> dict | None:
     if not kwargs:
         return await get_profile(profile_id)
 
-    now = datetime.now(timezone.utc).isoformat()
-    kwargs["updated_at"] = now
+    # Filter to only include columns that actually exist in the DB
+    valid_data = {k: v for k, v in kwargs.items() if k in _MUTABLE_COLUMNS}
+    if not valid_data:
+        return await get_profile(profile_id)
 
-    set_clause = ", ".join(f"{k} = ?" for k in kwargs)
-    vals = list(kwargs.values()) + [profile_id]
+    now = datetime.now(timezone.utc).isoformat()
+    valid_data["updated_at"] = now
+
+    set_clause = ", ".join(f"{k} = ?" for k in valid_data)
+    vals = list(valid_data.values()) + [profile_id]
 
     conn = await get_connection()
     try:

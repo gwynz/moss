@@ -1,19 +1,22 @@
 import flet as ft
+from typing import cast, Callable, Any
 from utils.crypto import initialize_session
 
 
 @ft.component
-def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
+def LoginView(needs_setup: bool, on_login_success: Callable[[ft.ControlEvent], Any]):
     password_ref = ft.use_ref()
 
     def on_login(e):
-        if not password_ref.current.value:
+        password_field = cast(ft.TextField, password_ref.current)
+        if not password_field or not password_field.value:
             return
-        if initialize_session(password_ref.current.value):
+
+        if initialize_session(password_field.value):
             on_login_success(e)
         else:
-            password_ref.current.error_text = "Incorrect password"
-            ft.context.page.update()
+            password_field.error_text = "Incorrect password"  # type: ignore
+            password_field.update()
 
     return ft.View(
         route="/login",
@@ -23,7 +26,7 @@ def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
             ft.Card(
                 content=ft.Container(
                     content=ft.Column(
-                        [
+                        cast(list[ft.Control], [
                             ft.Icon(
                                 ft.Icons.LOCK_PERSON_OUTLINED,
                                 size=80,
@@ -47,7 +50,7 @@ def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
                             ft.TextField(
-                                ref=password_ref,
+                                ref=cast(ft.Ref, password_ref),
                                 label="Master Password",
                                 password=True,
                                 can_reveal_password=True,
@@ -69,7 +72,7 @@ def LoginView(needs_setup: bool, on_login_success: ft.ControlEvent):
                                 text_align=ft.TextAlign.CENTER,
                                 width=320,
                             ),
-                        ],
+                        ]),
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=30,
                     ),
